@@ -45,7 +45,13 @@ void func()
 #endif
 
     // 加载动态库
-    DynamicLibrary lib(libPath);
+    DynamicLibrary lib0(libPath);
+    DynamicLibrary lib1(libPath);
+    // DynamicLibrary lib = lib0; 错误: 禁止拷贝构造
+    // lib0 = lib1;               错误: 禁止拷贝赋值
+
+    lib0 = std::move(lib1);              // 支持移动赋值
+    DynamicLibrary lib(std::move(lib0)); // 支持移动构造
 
     // 加载函数符号
     auto sayHello = lib.loadSymbol<sayHello_func>("sayHello");
