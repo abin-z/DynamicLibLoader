@@ -1,8 +1,8 @@
 ## 跨平台动态库显式加载案例
 
-本项目主要实现了跨平台的显式加载动态库的功能, 功能比较简单, 主要是记录动态库的显式加载流程.
+本项目主要实现了**跨平台的显式加载动态库**的功能, 功能比较简单, 主要是记录动态库的显式加载流程.
 
-- 封装了[动态库显式加载模块](./application/dynamicLibrary.hpp): `application/dynamicLibrary.hpp`
+- 封装了跨平台的[动态库显式加载模块](./application/dynamicLibrary.hpp): `application/dynamicLibrary.hpp`
 - 跨平台的[动态库导出头文件](./dynamic/include/dynamic/dll_export.h): `dynamic/include/dynamic/dll_export.h`
 - `dynamic`目录是一个独立动态库模块(比较简单).
 - `application`目录是独立程序, 其中会在代码中显式加载dynamic动态库.
@@ -29,7 +29,7 @@
 └── README.md
 ```
 
-#### 点击查看: [动态库加载方式介绍](./docs/动态库的加载方式介绍.md)
+### 点击查看: [动态库加载方式介绍](./docs/动态库的加载方式介绍.md)
 
 ### 动态库的加载方式主要有以下两种
 
