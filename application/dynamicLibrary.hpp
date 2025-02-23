@@ -1,10 +1,17 @@
+/**
+ * @description: Cross-platform dynamic lbirary explicit loading class (跨平台动态库显式加载类)
+ * @author: abin
+ * @date: 2025-01-19
+ * @license: MIT
+ */
+
 #pragma once
 
 #include <stdexcept>
 #include <string>
 
 /**
- * @brief 跨平台动态库加载工具 (类似于Boost.DLL的功能)
+ * @brief 跨平台动态库显式加载类 (类似于Boost.DLL的功能)
  * 为了让动态库加载的实现跨平台，主要需要考虑 Windows 和 POSIX（如 Linux、macOS）平台的差异。以下是实现跨平台动态库加载的改进方式：
  *
  * 动态库 API 的统一封装：
