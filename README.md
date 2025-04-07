@@ -2,10 +2,10 @@
 
 本项目主要实现了**跨平台的显式加载动态库**的功能, 功能比较简单, 主要是记录动态库的显式加载流程.
 
-- 封装了跨平台的[动态库显式加载模块](./application/dynamicLibrary.hpp): `application/dynamicLibrary.hpp`
-- 跨平台的[动态库导出头文件](./dynamic/include/dynamic/dll_export.h): `dynamic/include/dynamic/dll_export.h`
+- 封装了跨平台的动态库显式加载模块: [`application/dynamicLibrary.hpp`](./application/dynamicLibrary.hpp)
+- 跨平台的动态库导出头文件: [`dynamic/include/dynamic/dll_export.h`](./dynamic/include/dynamic/dll_export.h)
 - `dynamic`目录是一个独立动态库模块(比较简单).
-- `application`目录是独立程序, 其中会在代码中显式加载dynamic动态库.
+- `application`目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
 
 项目文件目录:
 
@@ -52,3 +52,15 @@
 
 - **隐式加载**适用于：依赖固定且少变、无需动态选择库的场景，简化了开发和维护工作。
 - **显式加载**适用于：需要动态加载库、插件或模块化设计、按需选择库、热更新等场景，提供更大的灵活性和控制力。
+
+
+
+<details>
+  <summary>点击展开查看更多内容</summary>
+
+- 测试
+- 测试2
+- 厕所3
+- 测试4
+
+</details>
