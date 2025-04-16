@@ -8,10 +8,10 @@
  */
 
 /// =========== 定义动态库中函数指针类型 start ===========
-using sayHello_func = void (*)();
-using intAdd_func = int (*)(int, int);
-using floatAdd_func = float(float, float);
-using doubleAdd_func = double(double, double);
+using sayHello_func  = void (*)();                // 函数指针类型
+using intAdd_func    = int (&)(int, int);         // 引用函数指针类型
+using floatAdd_func  = float (&&)(float, float);  // 右值引用函数指针类型
+using doubleAdd_func = double(double, double);    // 函数类型
 // 动态库中的struct
 struct point_t
 {
@@ -63,6 +63,19 @@ void func()
     auto doubleAdd  = lib.loadSymbol<doubleAdd_func>("doubleAdd");
     auto getPoint   = lib.loadSymbol<getPoint_func>("getPoint");
     auto printPoint = lib.loadSymbol<printPoint_func>("printPoint");
+
+    // 直接调用函数符号
+    int ret = lib.invokeSymbol<int(int, int)>("intAdd", 1, 2);
+    double ret2 = lib.invokeSymbol<double(double, double)>("doubleAdd", 1.8, 2.5);
+    ret = lib.invokeSymbol<int(int, int)>("intAdd", 2, 3);
+    ret = lib.invokeSymbol<int(int, int)>("intAdd", 3, 4);
+    ret = lib.invokeSymbol<int(*)(int, int)>("intAdd", 4, 5);
+    ret = lib.invokeSymbol<int(*)(int, int)>("intAdd", 5, 6);
+    ret = lib.invokeSymbol<int(&)(int, int)>("intAdd", 6, 7);
+    ret = lib.invokeSymbol<int(&)(int, int)>("intAdd", 7, 8);
+    ret = lib.invokeSymbol<int(&&)(int, int)>("intAdd", 8, 9);
+    std::cout << "invokeSymbol: intAdd(8, 9) = " << ret << std::endl;
+    std::cout << "invokeSymbol: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
 
     // 调用函数
     sayHello();

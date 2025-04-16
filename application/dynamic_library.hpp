@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 namespace dll
 {
@@ -213,6 +214,32 @@ class DynamicLibrary
     return detail::loadSymbol<Func>(handle_, symbolName);
   }
 
+  /**
+   * @brief 调用动态库中的符号, 支持参数转发
+   *
+   * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
+   * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
+   * @param symbolName 符号名称, 指定要调用的符号的名称
+   * @param args 可变参数, 传递给函数的参数
+   * @return 返回函数调用的结果
+   * @throw `std::runtime_error` 如果加载符号失败, 则抛出异常
+   *
+   * @note 该函数会尝试加载并调用动态库中的指定符号.如果符号不存在或加载失败,
+   *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
+   */
+  template <typename Func, typename... Args>
+  auto invokeSymbol(const std::string &symbolName, Args... args) const
+    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+  {
+    auto it = cache_.find(symbolName);
+    if (it == cache_.end())
+    {
+      auto symbol = loadSymbol<Func>(symbolName);                               // 加载符号
+      it = cache_.emplace(symbolName, reinterpret_cast<void *>(symbol)).first;  // 缓存符号
+    }
+    return reinterpret_cast<function_pointer_t<Func>>(it->second)(std::forward<Args>(args)...);
+  }
+
   /// @brief 检查动态库是否已加载
   /// @return 如果已加载, 返回 true; 否则返回 false
   bool isLoaded() const noexcept
@@ -231,8 +258,8 @@ class DynamicLibrary
   }
 
  private:
-  LibHandle handle_ = nullptr;  // 动态库句柄
-  // TODO 后续添加一个cache, 缓存已加载的符号, 用于拓展 invokeSymbol
+  LibHandle handle_ = nullptr;                             // 动态库句柄
+  mutable std::unordered_map<std::string, void *> cache_;  // 符号缓存
 };
 
 }  // namespace dll
