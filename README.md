@@ -1,10 +1,11 @@
-## 跨平台动态库显式加载案例
+## Header-only的跨平台动态库显式加载器
 
 本项目主要实现了**跨平台的显式加载动态库**的功能, 功能比较简单, 主要是记录动态库的显式加载流程.
 
 - 封装了跨平台的动态库显式加载模块: [`application/dynamic_library.hpp`](./application/dynamic_library.hpp)
 - 跨平台的动态库导出头文件: [`dynamic/include/dynamic/dll_export.h`](./dynamic/include/dynamic/dll_export.h)
-- [`dynamic`](dynamic/)目录是一个独立动态库模块(比较简单).
+- 加载器具体的使用案例请查看:  [`application/main.cpp`](./application/main.cpp)
+- [`dynamic`](dynamic/)目录是一个独立动态库模块(目标是生成动态库`.so`或者`.dll`).
 - [`application`](application/)目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
 
 项目文件目录:
@@ -29,6 +30,132 @@
 └── README.md
 ```
 
+### 使用方法和案例
+
+Header-only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目文件夹`#include "dynamic_library.hpp"`即可使用.
+
+<details>
+  <summary>点击查看使用案例</summary>
+
+```cpp
+#include <iostream>
+
+#include "dynamic_library.hpp"
+
+/*
+ * 为了在没有头文件的情况下调用 libdynamic.so 中的内容，你需要使用 动态链接库的运行时加载机制，
+ * 即通过 dlopen、dlsym 等函数（在 POSIX 系统上）或等效的方法（在 Windows 上，如 LoadLibrary 和 GetProcAddress）。
+ */
+
+/// =========== 定义动态库中函数指针类型 start ===========
+using sayHello_func = void (*)();
+using intAdd_func = int (*)(int, int);
+using floatAdd_func = float (*)(float, float);
+using doubleAdd_func = double (*)(double, double);
+// 动态库中的struct
+struct point_t
+{
+  double x;
+  double y;
+  double z;
+};
+
+using getPoint_func = point_t (*)();
+using printPoint_func = void (*)(point_t);
+/// =========== 定义动态库中函数指针类型 end ===========
+
+void func();
+void testNotExistSymbol(const dll::DynamicLibrary &lib);
+int main()
+{
+  std::cout << "====================================================" << std::endl;
+  func();
+  std::cout << "====================================================" << std::endl;
+  return 0;
+}
+
+/// @brief 使用封装的动态库加载流程
+void func()
+{
+  try
+  {
+    const std::string libPath =
+#if defined(_WIN32) || defined(_WIN64)
+      "dynamic.dll";
+#else
+      "./bin/libdynamic.so";
+#endif
+
+    // 加载动态库
+    using dll::DynamicLibrary;
+    DynamicLibrary lib0(libPath);
+    DynamicLibrary lib1(libPath);
+    // DynamicLibrary lib = lib0; 错误: 禁止拷贝构造
+    // lib0 = lib1;               错误: 禁止拷贝赋值
+
+    lib0 = std::move(lib1);               // 支持移动赋值
+    DynamicLibrary lib(std::move(lib0));  // 支持移动构造
+
+    // 加载函数符号
+    auto sayHello   = lib.loadSymbol<sayHello_func>("sayHello");
+    auto intAdd     = lib.loadSymbol<intAdd_func>("intAdd");
+    auto floatAdd   = lib.loadSymbol<floatAdd_func>("floatAdd");
+    auto doubleAdd  = lib.loadSymbol<doubleAdd_func>("doubleAdd");
+    auto getPoint   = lib.loadSymbol<getPoint_func>("getPoint");
+    auto printPoint = lib.loadSymbol<printPoint_func>("printPoint");
+
+    // 调用函数
+    sayHello();
+
+    int a = 5, b = 3;
+    std::cout << "intAdd(" << a << ", " << b << ") = " << intAdd(a, b) << std::endl;
+
+    float fa = 1.5f, fb = 2.3f;
+    std::cout << "floatAdd(" << fa << ", " << fb << ") = " << floatAdd(fa, fb) << std::endl;
+
+    double da = 3.14159, db = 2.71828;
+    std::cout << "doubleAdd(" << da << ", " << db << ") = " << doubleAdd(da, db) << std::endl;
+
+    point_t p = getPoint();
+    std::cout << "getPoint() = {x: " << p.x << ", y: " << p.y << ", z: " << p.z << "}" << std::endl;
+
+    std::cout << "printPoint() output: ";
+    printPoint(p);
+    std::cout << std::endl;
+
+    testNotExistSymbol(lib);
+  }
+  catch (const std::exception &ex)
+  {
+    std::cerr << "Error: " << ex.what() << std::endl;
+    return;
+  }
+}
+
+/// @brief 测试符号信息不存在的情况
+void testNotExistSymbol(const dll::DynamicLibrary &lib)
+{
+  std::cout << "---------testNotExistSymbol----------" << std::endl;
+  // 测试不存在的函数符号加载
+  auto unknownFunc = lib.tryLoadSymbol<printPoint_func>("notExistFunc");  // 加载失败不抛异常,返回nullptr
+  if (unknownFunc == nullptr)
+  {
+    std::cout << "lib.tryLoadSymbol<printPoint_func>(\"notExistFunc\"); load failed, return nullptr." << std::endl;
+  }
+  try
+  {
+    auto unknownFunc2 = lib.loadSymbol<printPoint_func>("notExistFunc");  // 加载失败抛出异常
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  std::cout << "---------testNotExistSymbol----------" << std::endl;
+}
+```
+
+</details>
+
 ### 点击查看: [动态库加载方式介绍](./docs/动态库的加载方式介绍.md)
 
 ### 动态库的加载方式主要有以下两种
@@ -52,3 +179,6 @@
 
 - **隐式加载**适用于：依赖固定且少变、无需动态选择库的场景，简化了开发和维护工作。
 - **显式加载**适用于：需要动态加载库、插件或模块化设计、按需选择库、热更新等场景，提供更大的灵活性和控制力。
+
+
+
