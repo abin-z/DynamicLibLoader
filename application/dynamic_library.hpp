@@ -23,7 +23,7 @@
  * @author: abin
  * @date: 2025-01-19
  * @license: MIT
- * @repository: https://github.com/abin-z/DynamicLibLoading
+ * @repository: https://github.com/abin-z/DynamicLibLoader
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *********************************************************************************************************/
 
