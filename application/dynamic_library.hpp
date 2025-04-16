@@ -12,24 +12,24 @@
 
 /**
  * @brief 跨平台动态库显式加载类 (类似于Boost.DLL的功能)
- * 为了让动态库加载的实现跨平台，主要需要考虑 Windows 和 POSIX（如
- * Linux、macOS）平台的差异。以下是实现跨平台动态库加载的改进方式：
+ * 为了让动态库加载的实现跨平台, 主要需要考虑 Windows 和 POSIX(如
+ * Linux、macOS)平台的差异.以下是实现跨平台动态库加载的改进方式：
  *
  * 动态库 API 的统一封装：
- * Windows 使用 LoadLibraryA 和 GetProcAddress，而 POSIX 使用 dlopen 和 dlsym。
- * 定义统一的 loadLibrary、unloadLibrary 和 loadSymbol 函数。
+ * Windows 使用 LoadLibraryA 和 GetProcAddress, 而 POSIX 使用 dlopen 和 dlsym.
+ * 定义统一的 loadLibrary、unloadLibrary 和 loadSymbol 函数.
  *
  * 错误信息处理：
- * Windows 使用 GetLastError 并通过 FormatMessageA 获取详细错误信息。
- * POSIX 使用 dlerror 获取错误信息。
+ * Windows 使用 GetLastError 并通过 FormatMessageA 获取详细错误信息.
+ * POSIX 使用 dlerror 获取错误信息.
  *
  * 使用 LibHandle 统一管理句柄类型：
- * 在 Windows 上，句柄类型是 HMODULE。
- * 在 POSIX 平台上，句柄类型是 void*。
+ * 在 Windows 上, 句柄类型是 HMODULE.
+ * 在 POSIX 平台上, 句柄类型是 void*.
  *
  * 条件编译：
- * 使用 #if defined(_WIN32) || defined(_WIN64) 检测 Windows 平台。
- * 其他平台默认使用 POSIX 的实现。
+ * 使用 #if defined(_WIN32) || defined(_WIN64) 检测 Windows 平台.
+ * 其他平台默认使用 POSIX 的实现.
  */
 
 // 定义平台相关的动态库 API
@@ -37,23 +37,23 @@
 #include <windows.h>
 using LibHandle = HMODULE;
 
-inline LibHandle loadLibrary(const std::string &path)
+inline LibHandle loadLibrary(const std::string &path) noexcept
 {
   return LoadLibraryA(path.c_str());
 }
 
-inline void unloadLibrary(LibHandle handle)
+inline void unloadLibrary(LibHandle handle) noexcept
 {
   if (handle)
   {
     FreeLibrary(handle);
-    handle = nullptr;
   }
 }
 
 template <typename Func>
-inline Func loadSymbol(LibHandle handle, const std::string &name)
+inline Func loadSymbol(LibHandle handle, const std::string &name) noexcept
 {
+  static_assert(std::is_pointer<Func>::value, "Func must be a pointer type");  // 确保 Func 是指针类型
   return reinterpret_cast<Func>(GetProcAddress(handle, name.c_str()));
 }
 
@@ -65,30 +65,32 @@ inline std::string getLastError()
                                error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
   std::string message((LPSTR)msgBuffer, size);
   LocalFree(msgBuffer);
-  return message;
+  return "Error Code: " + std::to_string(error) + " - " + message;
 }
+
 #else
+
 #include <dlfcn.h>
 using LibHandle = void *;
 
-inline LibHandle loadLibrary(const std::string &path)
+inline LibHandle loadLibrary(const std::string &path) noexcept
 {
   return dlopen(path.c_str(), RTLD_LAZY);
 }
 
-inline void unloadLibrary(LibHandle handle)
+inline void unloadLibrary(LibHandle handle) noexcept
 {
   if (handle)
   {
     dlclose(handle);
-    handle = nullptr;
   }
 }
 
 template <typename Func>
-inline Func loadSymbol(LibHandle handle, const std::string &name)
+inline Func loadSymbol(LibHandle handle, const std::string &name) noexcept
 {
-  dlerror();  // 清除之前的错误
+  static_assert(std::is_pointer<Func>::value, "Func must be a pointer type");  // 确保 Func 是指针类型
+  dlerror();                                                                   // 清除之前的错误
   return reinterpret_cast<Func>(dlsym(handle, name.c_str()));
 }
 
@@ -99,14 +101,14 @@ inline std::string getLastError()
 }
 #endif
 
-/// @brief 动态库加载类，使用 RAII 管理动态库资源
+/// @brief 动态库加载类, 使用 RAII 管理动态库资源
 class DynamicLibrary
 {
  public:
   /**
-   * @brief 构造函数，加载指定路径的动态库
+   * @brief 构造函数, 加载指定路径的动态库
    * @param libPath 动态库路径
-   * @throw std::runtime_error 如果加载失败，则抛出异常
+   * @throw std::runtime_error 如果加载失败, 则抛出异常
    */
   explicit DynamicLibrary(const std::string &libPath) : handle(nullptr)
   {
@@ -125,11 +127,15 @@ class DynamicLibrary
   }
 
   /**
-   * @brief 加载符号
-   * @tparam Func 函数指针类型
-   * @param symbolName 符号名称
-   * @return 符号地址
-   * @throw std::runtime_error 如果加载符号失败，则抛出异常
+   * @brief 加载符号, 加载失败抛出异常(异常导向式API)
+   *
+   * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
+   * @param symbolName 符号名称, 指定要加载的符号的名称
+   * @return 返回加载的符号地址
+   * @throw std::runtime_error 如果加载符号失败, 则抛出异常
+   *
+   * @note 该函数尝试加载动态库中的指定符号, 如果加载失败(如符号不存在),
+   *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
   template <typename Func>
   Func loadSymbol(const std::string &symbolName)
@@ -142,24 +148,39 @@ class DynamicLibrary
     return symbol;
   }
 
+  /**
+   * @brief 尝试加载符号, 加载失败时不抛出异常, 而是返回 nullptr
+   *
+   * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
+   * @param symbolName 符号名称, 指定要加载的符号的名称
+   * @return 返回加载的符号地址, 如果加载失败返回 nullptr
+   *
+   * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
+   */
+  template <typename Func>
+  Func tryLoadSymbol(const std::string &symbolName) noexcept
+  {
+    return ::loadSymbol<Func>(handle, symbolName);
+  }
+
   /// @brief 检查动态库是否已加载
-  /// @return 如果已加载，返回 true；否则返回 false
+  /// @return 如果已加载, 返回 true; 否则返回 false
   bool isLoaded() const noexcept
   {
     return handle != nullptr;
   }
 
-  // 禁用拷贝语义，防止拷贝可能导致的资源管理问题
+  // 禁用拷贝语义, 防止拷贝可能导致的资源管理问题
   DynamicLibrary(const DynamicLibrary &) = delete;
   DynamicLibrary &operator=(const DynamicLibrary &) = delete;
 
-  // 支持移动语义，便于资源的安全转移 - 移动构造
+  // 支持移动语义, 便于资源的安全转移 - 移动构造
   DynamicLibrary(DynamicLibrary &&other) noexcept : handle(other.handle)
   {
     other.handle = nullptr;
   }
 
-  // 支持移动语义，便于资源的安全转移 - 移动赋值
+  // 支持移动语义, 便于资源的安全转移 - 移动赋值
   DynamicLibrary &operator=(DynamicLibrary &&other) noexcept
   {
     if (this != &other)
