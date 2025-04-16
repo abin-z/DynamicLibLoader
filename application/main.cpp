@@ -25,6 +25,7 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
+void testNotExistSymbol(const DynamicLibrary &lib);
 int main()
 {
   std::cout << "====================================================" << std::endl;
@@ -80,10 +81,33 @@ void func()
     std::cout << "printPoint() output: ";
     printPoint(p);
     std::cout << std::endl;
+
+    testNotExistSymbol(lib);
   }
   catch (const std::exception &ex)
   {
     std::cerr << "Error: " << ex.what() << std::endl;
     return;
   }
+}
+
+/// @brief 测试符号信息不存在的情况
+void testNotExistSymbol(const DynamicLibrary &lib)
+{
+  std::cout << "---------testNotExistSymbol----------" << std::endl;
+  // 测试不存在的函数符号加载
+  auto unknownFunc = lib.tryLoadSymbol<printPoint_func>("notExistFunc");  // 加载失败不抛异常,返回nullptr
+  if (unknownFunc == nullptr)
+  {
+    std::cout << "lib.tryLoadSymbol<printPoint_func>(\"notExistFunc\"); load failed, return nullptr." << std::endl;
+  }
+  try
+  {
+    auto unknownFunc2 = lib.loadSymbol<printPoint_func>("notExistFunc");  // 加载失败抛出异常
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  std::cout << "---------testNotExistSymbol----------" << std::endl;
 }

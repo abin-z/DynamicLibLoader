@@ -138,7 +138,7 @@ class DynamicLibrary
    *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
   template <typename Func>
-  Func loadSymbol(const std::string &symbolName)
+  Func loadSymbol(const std::string &symbolName) const
   {
     Func symbol = ::loadSymbol<Func>(handle, symbolName);
     if (!symbol)
@@ -158,7 +158,7 @@ class DynamicLibrary
    * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
    */
   template <typename Func>
-  Func tryLoadSymbol(const std::string &symbolName) noexcept
+  Func tryLoadSymbol(const std::string &symbolName) const noexcept
   {
     return ::loadSymbol<Func>(handle, symbolName);
   }
