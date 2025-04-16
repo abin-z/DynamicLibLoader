@@ -120,10 +120,10 @@ class DynamicLibrary
    * @param libPath 动态库路径
    * @throw std::runtime_error 如果加载失败, 则抛出异常
    */
-  explicit DynamicLibrary(const std::string &libPath) : handle(nullptr)
+  explicit DynamicLibrary(const std::string &libPath) : handle_(nullptr)
   {
-    handle = detail::loadLibrary(libPath);
-    if (!handle)
+    handle_ = detail::loadLibrary(libPath);
+    if (!handle_)
     {
       throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::getLastError());
     }
@@ -132,10 +132,10 @@ class DynamicLibrary
   /// @brief 析构函数 - 自动卸载动态库
   ~DynamicLibrary()
   {
-    if (handle)  // 只有在 handle 非 nullptr 时才卸载
+    if (handle_)  // 只有在 handle 非 nullptr 时才卸载
     {
-      detail::unloadLibrary(handle);
-      handle = nullptr;
+      detail::unloadLibrary(handle_);
+      handle_ = nullptr;
     }
   }
 
@@ -144,9 +144,9 @@ class DynamicLibrary
   DynamicLibrary &operator=(const DynamicLibrary &) = delete;
 
   // 支持移动语义, 便于资源的安全转移 - 移动构造
-  DynamicLibrary(DynamicLibrary &&other) noexcept : handle(other.handle)
+  DynamicLibrary(DynamicLibrary &&other) noexcept : handle_(other.handle_)
   {
-    other.handle = nullptr;
+    other.handle_ = nullptr;
   }
 
   // 支持移动语义, 便于资源的安全转移 - 移动赋值
@@ -154,12 +154,12 @@ class DynamicLibrary
   {
     if (this != &other)
     {
-      if (handle)  // 卸载自身句柄
+      if (handle_)  // 卸载自身句柄
       {
-        detail::unloadLibrary(handle);
+        detail::unloadLibrary(handle_);
       }
-      handle = other.handle;
-      other.handle = nullptr;
+      handle_ = other.handle_;
+      other.handle_ = nullptr;
     }
     return *this;
   }
@@ -178,7 +178,7 @@ class DynamicLibrary
   template <typename Func>
   Func loadSymbol(const std::string &symbolName) const
   {
-    Func symbol = detail::loadSymbol<Func>(handle, symbolName);
+    Func symbol = detail::loadSymbol<Func>(handle_, symbolName);
     if (!symbol)
     {
       throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::getLastError());
@@ -198,14 +198,14 @@ class DynamicLibrary
   template <typename Func>
   Func tryLoadSymbol(const std::string &symbolName) const noexcept
   {
-    return detail::loadSymbol<Func>(handle, symbolName);
+    return detail::loadSymbol<Func>(handle_, symbolName);
   }
 
   /// @brief 检查动态库是否已加载
   /// @return 如果已加载, 返回 true; 否则返回 false
   bool isLoaded() const noexcept
   {
-    return handle != nullptr;
+    return handle_ != nullptr;
   }
 
   /// @brief 获取动态库底层原生句柄 (Windows 的 `HMODULE` 或 POSIX 的 `void*`)
@@ -215,11 +215,11 @@ class DynamicLibrary
   ///   避免在销毁前手动释放或操作句柄.不正确的手动操作句柄可能导致资源泄露或不正确的资源管理(破坏RAII机制).
   LibHandle nativeHandle()
   {
-    return handle;
+    return handle_;
   }
 
  private:
-  LibHandle handle = nullptr;  // 动态库句柄
+  LibHandle handle_ = nullptr;  // 动态库句柄
 };
 
 }  // namespace dll
