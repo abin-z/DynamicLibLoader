@@ -4,8 +4,8 @@
 
 - 封装了跨平台的动态库显式加载模块: [`application/dynamic_library.hpp`](./application/dynamic_library.hpp)
 - 跨平台的动态库导出头文件: [`dynamic/include/dynamic/dll_export.h`](./dynamic/include/dynamic/dll_export.h)
-- `dynamic`目录是一个独立动态库模块(比较简单).
-- `application`目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
+- [`dynamic`](dynamic/)目录是一个独立动态库模块(比较简单).
+- [`application`](application/)目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
 
 项目文件目录:
 
