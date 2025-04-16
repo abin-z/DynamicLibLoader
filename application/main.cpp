@@ -1,5 +1,5 @@
 #include <iostream>
-#include "dynamicLibrary.hpp"
+#include "dynamic_library.hpp"
 
 /*
  * 为了在没有头文件的情况下调用 libdynamic.so 中的内容，你需要使用 动态链接库的运行时加载机制，

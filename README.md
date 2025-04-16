@@ -2,7 +2,7 @@
 
 本项目主要实现了**跨平台的显式加载动态库**的功能, 功能比较简单, 主要是记录动态库的显式加载流程.
 
-- 封装了跨平台的动态库显式加载模块: [`application/dynamicLibrary.hpp`](./application/dynamicLibrary.hpp)
+- 封装了跨平台的动态库显式加载模块: [`application/dynamic_library.hpp`](./application/dynamic_library.hpp)
 - 跨平台的动态库导出头文件: [`dynamic/include/dynamic/dll_export.h`](./dynamic/include/dynamic/dll_export.h)
 - `dynamic`目录是一个独立动态库模块(比较简单).
 - `application`目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
@@ -13,7 +13,7 @@
 .
 ├── application
 │   ├── CMakeLists.txt
-│   ├── dynamicLibrary.hpp
+│   ├── dynamic_library.hpp
 │   └── main.cpp
 ├── docs
 │   └── 动态库的加载方式介绍.md
