@@ -38,6 +38,17 @@ namespace dll
 {
 namespace detail
 {
+/// @brief 通用函数指针类型适配器
+template <typename T>
+struct function_pointer_traits
+{
+  using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type *;
+};
+
+/// @brief 通用函数指针类型别名
+template <typename T>
+using function_pointer_t = typename function_pointer_traits<T>::type;
+
 // 定义平台相关的动态库 API
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
@@ -57,10 +68,9 @@ inline void unloadLibrary(LibHandle handle) noexcept
 }
 
 template <typename Func>
-inline Func loadSymbol(LibHandle handle, const std::string &name) noexcept
+inline function_pointer_t<Func> loadSymbol(LibHandle handle, const std::string &name) noexcept
 {
-  static_assert(std::is_pointer<Func>::value, "Func must be a pointer type");  // 确保 Func 是指针类型
-  return reinterpret_cast<Func>(GetProcAddress(handle, name.c_str()));
+  return reinterpret_cast<function_pointer_t<Func>>(GetProcAddress(handle, name.c_str()));
 }
 
 inline std::string getLastError()
@@ -93,11 +103,10 @@ inline void unloadLibrary(LibHandle handle) noexcept
 }
 
 template <typename Func>
-inline Func loadSymbol(LibHandle handle, const std::string &name) noexcept
+inline function_pointer_t<Func> loadSymbol(LibHandle handle, const std::string &name) noexcept
 {
-  static_assert(std::is_pointer<Func>::value, "Func must be a pointer type");  // 确保 Func 是指针类型
-  dlerror();                                                                   // 清除之前的错误
-  return reinterpret_cast<Func>(dlsym(handle, name.c_str()));
+  dlerror();  // 清除之前的错误
+  return reinterpret_cast<function_pointer_t<Func>>(dlsym(handle, name.c_str()));
 }
 
 inline std::string getLastError()
@@ -114,6 +123,9 @@ using detail::LibHandle;
 /// @brief 动态库加载类, 使用 RAII 管理动态库资源
 class DynamicLibrary
 {
+  template <typename T>
+  using function_pointer_t = typename detail::function_pointer_t<T>;
+
  public:
   /**
    * @brief 构造函数, 加载指定路径的动态库
@@ -176,9 +188,9 @@ class DynamicLibrary
    *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
   template <typename Func>
-  Func loadSymbol(const std::string &symbolName) const
+  function_pointer_t<Func> loadSymbol(const std::string &symbolName) const
   {
-    Func symbol = detail::loadSymbol<Func>(handle_, symbolName);
+    auto symbol = detail::loadSymbol<Func>(handle_, symbolName);
     if (!symbol)
     {
       throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::getLastError());
@@ -196,7 +208,7 @@ class DynamicLibrary
    * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
    */
   template <typename Func>
-  Func tryLoadSymbol(const std::string &symbolName) const noexcept
+  function_pointer_t<Func> tryLoadSymbol(const std::string &symbolName) const noexcept
   {
     return detail::loadSymbol<Func>(handle_, symbolName);
   }
@@ -220,6 +232,7 @@ class DynamicLibrary
 
  private:
   LibHandle handle_ = nullptr;  // 动态库句柄
+  // TODO 后续添加一个cache, 缓存已加载的符号, 用于拓展 invokeSymbol
 };
 
 }  // namespace dll
