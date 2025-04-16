@@ -1,25 +1,31 @@
-/**
- * @description: Cross-platform dynamic library explicit loading class (跨平台动态库显式加载类)
+/*********************************************************************************************************
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * @file: dynamic_library.hpp
+ * @version: v0.9.0
+ * @description: Cross-platform dynamic library explicit loader
+ *    - This class provides a cross-platform way to explicitly load dynamic libraries.
+ *    - It uses conditional compilation to handle differences between Windows and POSIX platforms (such as Linux and macOS).
+ *
+ * Key Features:
+ * 1. Unified Dynamic Library API:
+ *    - Uses `LoadLibraryA` and `GetProcAddress` on Windows.
+ *    - Uses `dlopen` and `dlsym` on POSIX-compliant systems.
+ * 2. Error Handling:
+ *    - On Windows, retrieves detailed error messages via `GetLastError` and `FormatMessageA`.
+ *    - On POSIX, uses `dlerror` for error reporting.
+ * 3. Unified Handle Abstraction:
+ *    - Uses `HMODULE` as the library handle on Windows.
+ *    - Uses `void*` on POSIX systems.
+ * 4. Platform Detection via Conditional Compilation:
+ *    - Uses `#if defined(_WIN32) || defined(_WIN64)` to detect Windows.
+ *    - Defaults to POSIX implementation on other platforms.
+ *
  * @author: abin
  * @date: 2025-01-19
  * @license: MIT
- *
- * @brief 跨平台动态库显式加载类 (类似于 Boost.DLL 的功能)
- * 为了使动态库加载实现跨平台，考虑 Windows 和 POSIX（如 Linux、macOS）平台的差异，采用条件编译。
- *
- * 主要特点：
- * 1. 动态库 API 的统一封装：
- *    - Windows 使用 `LoadLibraryA` 和 `GetProcAddress`；
- *    - POSIX 使用 `dlopen` 和 `dlsym`。
- * 2. 错误信息处理：
- *    - Windows 使用 `GetLastError` 并通过 `FormatMessageA` 获取详细错误信息；
- *    - POSIX 使用 `dlerror` 获取错误信息。
- * 3. 使用 `LibHandle` 统一管理句柄类型：
- *    - Windows 上句柄类型是 `HMODULE`；
- *    - POSIX 平台上句柄类型是 `void*`。
- * 4. 通过条件编译实现平台差异处理：
- *    - 使用 `#if defined(_WIN32) || defined(_WIN64)` 检测 Windows 平台，其他平台则使用 POSIX 实现。
- */
+ * @repository: https://github.com/abin-z/DynamicLibLoading
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *********************************************************************************************************/
 
 #ifndef DYNAMIC_LIBRARY_H
 #define DYNAMIC_LIBRARY_H
@@ -126,8 +132,36 @@ class DynamicLibrary
   /// @brief 析构函数 - 自动卸载动态库
   ~DynamicLibrary()
   {
-    detail::unloadLibrary(handle);
-    handle = nullptr;
+    if (handle)  // 只有在 handle 非 nullptr 时才卸载
+    {
+      detail::unloadLibrary(handle);
+      handle = nullptr;
+    }
+  }
+
+  // 禁用拷贝语义, 防止拷贝可能导致的资源管理问题
+  DynamicLibrary(const DynamicLibrary &) = delete;
+  DynamicLibrary &operator=(const DynamicLibrary &) = delete;
+
+  // 支持移动语义, 便于资源的安全转移 - 移动构造
+  DynamicLibrary(DynamicLibrary &&other) noexcept : handle(other.handle)
+  {
+    other.handle = nullptr;
+  }
+
+  // 支持移动语义, 便于资源的安全转移 - 移动赋值
+  DynamicLibrary &operator=(DynamicLibrary &&other) noexcept
+  {
+    if (this != &other)
+    {
+      if (handle)  // 卸载自身句柄
+      {
+        detail::unloadLibrary(handle);
+      }
+      handle = other.handle;
+      other.handle = nullptr;
+    }
+    return *this;
   }
 
   /**
@@ -174,29 +208,14 @@ class DynamicLibrary
     return handle != nullptr;
   }
 
-  // 禁用拷贝语义, 防止拷贝可能导致的资源管理问题
-  DynamicLibrary(const DynamicLibrary &) = delete;
-  DynamicLibrary &operator=(const DynamicLibrary &) = delete;
-
-  // 支持移动语义, 便于资源的安全转移 - 移动构造
-  DynamicLibrary(DynamicLibrary &&other) noexcept : handle(other.handle)
+  /// @brief 获取动态库底层原生句柄 (Windows 的 `HMODULE` 或 POSIX 的 `void*`)
+  /// @return 底层原生句柄
+  /// @note
+  /// - 返回的句柄是操作系统的原生句柄, 直接操作时请小心.确保 `DynamicLibrary` 对象的生命周期有效,
+  ///   避免在销毁前手动释放或操作句柄.不正确的手动操作句柄可能导致资源泄露或不正确的资源管理(破坏RAII机制).
+  LibHandle nativeHandle()
   {
-    other.handle = nullptr;
-  }
-
-  // 支持移动语义, 便于资源的安全转移 - 移动赋值
-  DynamicLibrary &operator=(DynamicLibrary &&other) noexcept
-  {
-    if (this != &other)
-    {
-      if (handle)  // 卸载自身句柄
-      {
-        detail::unloadLibrary(handle);
-      }
-      handle = other.handle;
-      other.handle = nullptr;
-    }
-    return *this;
+    return handle;
   }
 
  private:
