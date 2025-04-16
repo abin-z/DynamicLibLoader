@@ -12,7 +12,8 @@
 
 /**
  * @brief 跨平台动态库显式加载类 (类似于Boost.DLL的功能)
- * 为了让动态库加载的实现跨平台，主要需要考虑 Windows 和 POSIX（如 Linux、macOS）平台的差异。以下是实现跨平台动态库加载的改进方式：
+ * 为了让动态库加载的实现跨平台，主要需要考虑 Windows 和 POSIX（如
+ * Linux、macOS）平台的差异。以下是实现跨平台动态库加载的改进方式：
  *
  * 动态库 API 的统一封装：
  * Windows 使用 LoadLibraryA 和 GetProcAddress，而 POSIX 使用 dlopen 和 dlsym。
@@ -60,8 +61,8 @@ inline std::string getLastError()
 {
   DWORD error = GetLastError();
   LPVOID msgBuffer;
-  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                               NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
+  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                               error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
   std::string message((LPSTR)msgBuffer, size);
   LocalFree(msgBuffer);
   return message;
@@ -87,7 +88,7 @@ inline void unloadLibrary(LibHandle handle)
 template <typename Func>
 inline Func loadSymbol(LibHandle handle, const std::string &name)
 {
-  dlerror(); // 清除之前的错误
+  dlerror();  // 清除之前的错误
   return reinterpret_cast<Func>(dlsym(handle, name.c_str()));
 }
 
@@ -101,7 +102,7 @@ inline std::string getLastError()
 /// @brief 动态库加载类，使用 RAII 管理动态库资源
 class DynamicLibrary
 {
-public:
+ public:
   /**
    * @brief 构造函数，加载指定路径的动态库
    * @param libPath 动态库路径
@@ -163,7 +164,7 @@ public:
   {
     if (this != &other)
     {
-      if (handle) // 卸载自身句柄
+      if (handle)  // 卸载自身句柄
       {
         unloadLibrary(handle);
       }
@@ -173,6 +174,6 @@ public:
     return *this;
   }
 
-private:
-  LibHandle handle = nullptr; // 动态库句柄
+ private:
+  LibHandle handle = nullptr;  // 动态库句柄
 };

@@ -1,4 +1,5 @@
 #include <dynamic/dynamic.h>
+
 #include <dynamic/common.hpp>
 #include <string>
 
@@ -27,9 +28,6 @@ DLL_PUBLIC_API point_t getPoint()
 
 DLL_PUBLIC_API void printPoint(point_t arg)
 {
-  std::string str =
-      "{x: " + std::to_string(arg.x) +
-      " y: " + std::to_string(arg.y) +
-      " z: " + std::to_string(arg.z) + "}";
+  std::string str = "{x: " + std::to_string(arg.x) + " y: " + std::to_string(arg.y) + " z: " + std::to_string(arg.z) + "}";
   Common::print(str);
 }

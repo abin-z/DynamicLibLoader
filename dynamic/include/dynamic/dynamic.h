@@ -9,26 +9,25 @@
  *
  */
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  /// 可选：如果需要显式的内存对齐控制，可以使用 #pragma pack 或 __attribute__((packed))
-  struct point_t
-  {
-    double x;
-    double y;
-    double z;
-  };
+/// 可选：如果需要显式的内存对齐控制，可以使用 #pragma pack 或 __attribute__((packed))
+struct point_t
+{
+  double x;
+  double y;
+  double z;
+};
 
-  DLL_PUBLIC_API void sayHello();
+DLL_PUBLIC_API void sayHello();
 
-  DLL_PUBLIC_API int intAdd(int a, int b);
-  DLL_PUBLIC_API float floatAdd(float a, float b);
-  DLL_PUBLIC_API double doubleAdd(double a, double b);
+DLL_PUBLIC_API int intAdd(int a, int b);
+DLL_PUBLIC_API float floatAdd(float a, float b);
+DLL_PUBLIC_API double doubleAdd(double a, double b);
 
-  DLL_PUBLIC_API point_t getPoint();
-  DLL_PUBLIC_API void printPoint(point_t arg);
+DLL_PUBLIC_API point_t getPoint();
+DLL_PUBLIC_API void printPoint(point_t arg);
 
 #ifdef __cplusplus
 }
