@@ -1,37 +1,37 @@
 /**
- * @description: Cross-platform dynamic lbirary explicit loading class (跨平台动态库显式加载类)
+ * @description: Cross-platform dynamic library explicit loading class (跨平台动态库显式加载类)
  * @author: abin
  * @date: 2025-01-19
  * @license: MIT
+ *
+ * @brief 跨平台动态库显式加载类 (类似于 Boost.DLL 的功能)
+ * 为了使动态库加载实现跨平台，考虑 Windows 和 POSIX（如 Linux、macOS）平台的差异，采用条件编译。
+ *
+ * 主要特点：
+ * 1. 动态库 API 的统一封装：
+ *    - Windows 使用 `LoadLibraryA` 和 `GetProcAddress`；
+ *    - POSIX 使用 `dlopen` 和 `dlsym`。
+ * 2. 错误信息处理：
+ *    - Windows 使用 `GetLastError` 并通过 `FormatMessageA` 获取详细错误信息；
+ *    - POSIX 使用 `dlerror` 获取错误信息。
+ * 3. 使用 `LibHandle` 统一管理句柄类型：
+ *    - Windows 上句柄类型是 `HMODULE`；
+ *    - POSIX 平台上句柄类型是 `void*`。
+ * 4. 通过条件编译实现平台差异处理：
+ *    - 使用 `#if defined(_WIN32) || defined(_WIN64)` 检测 Windows 平台，其他平台则使用 POSIX 实现。
  */
 
-#pragma once
+#ifndef DYNAMIC_LIBRARY_H
+#define DYNAMIC_LIBRARY_H
 
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
-/**
- * @brief 跨平台动态库显式加载类 (类似于Boost.DLL的功能)
- * 为了让动态库加载的实现跨平台, 主要需要考虑 Windows 和 POSIX(如
- * Linux、macOS)平台的差异.以下是实现跨平台动态库加载的改进方式：
- *
- * 动态库 API 的统一封装：
- * Windows 使用 LoadLibraryA 和 GetProcAddress, 而 POSIX 使用 dlopen 和 dlsym.
- * 定义统一的 loadLibrary、unloadLibrary 和 loadSymbol 函数.
- *
- * 错误信息处理：
- * Windows 使用 GetLastError 并通过 FormatMessageA 获取详细错误信息.
- * POSIX 使用 dlerror 获取错误信息.
- *
- * 使用 LibHandle 统一管理句柄类型：
- * 在 Windows 上, 句柄类型是 HMODULE.
- * 在 POSIX 平台上, 句柄类型是 void*.
- *
- * 条件编译：
- * 使用 #if defined(_WIN32) || defined(_WIN64) 检测 Windows 平台.
- * 其他平台默认使用 POSIX 的实现.
- */
-
+namespace dll
+{
+namespace detail
+{
 // 定义平台相关的动态库 API
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
@@ -101,6 +101,10 @@ inline std::string getLastError()
 }
 #endif
 
+}  // namespace detail
+
+using detail::LibHandle;
+
 /// @brief 动态库加载类, 使用 RAII 管理动态库资源
 class DynamicLibrary
 {
@@ -112,17 +116,17 @@ class DynamicLibrary
    */
   explicit DynamicLibrary(const std::string &libPath) : handle(nullptr)
   {
-    handle = loadLibrary(libPath);
+    handle = detail::loadLibrary(libPath);
     if (!handle)
     {
-      throw std::runtime_error("Failed to load library: " + libPath + " - " + getLastError());
+      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::getLastError());
     }
   }
 
   /// @brief 析构函数 - 自动卸载动态库
   ~DynamicLibrary()
   {
-    unloadLibrary(handle);
+    detail::unloadLibrary(handle);
     handle = nullptr;
   }
 
@@ -140,10 +144,10 @@ class DynamicLibrary
   template <typename Func>
   Func loadSymbol(const std::string &symbolName) const
   {
-    Func symbol = ::loadSymbol<Func>(handle, symbolName);
+    Func symbol = detail::loadSymbol<Func>(handle, symbolName);
     if (!symbol)
     {
-      throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + getLastError());
+      throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::getLastError());
     }
     return symbol;
   }
@@ -160,7 +164,7 @@ class DynamicLibrary
   template <typename Func>
   Func tryLoadSymbol(const std::string &symbolName) const noexcept
   {
-    return ::loadSymbol<Func>(handle, symbolName);
+    return detail::loadSymbol<Func>(handle, symbolName);
   }
 
   /// @brief 检查动态库是否已加载
@@ -187,7 +191,7 @@ class DynamicLibrary
     {
       if (handle)  // 卸载自身句柄
       {
-        unloadLibrary(handle);
+        detail::unloadLibrary(handle);
       }
       handle = other.handle;
       other.handle = nullptr;
@@ -198,3 +202,7 @@ class DynamicLibrary
  private:
   LibHandle handle = nullptr;  // 动态库句柄
 };
+
+}  // namespace dll
+
+#endif  // DYNAMIC_LIBRARY_H

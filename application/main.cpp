@@ -25,7 +25,7 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
-void testNotExistSymbol(const DynamicLibrary &lib);
+void testNotExistSymbol(const dll::DynamicLibrary &lib);
 int main()
 {
   std::cout << "====================================================" << std::endl;
@@ -47,6 +47,7 @@ void func()
 #endif
 
     // 加载动态库
+    using dll::DynamicLibrary;
     DynamicLibrary lib0(libPath);
     DynamicLibrary lib1(libPath);
     // DynamicLibrary lib = lib0; 错误: 禁止拷贝构造
@@ -56,11 +57,11 @@ void func()
     DynamicLibrary lib(std::move(lib0));  // 支持移动构造
 
     // 加载函数符号
-    auto sayHello = lib.loadSymbol<sayHello_func>("sayHello");
-    auto intAdd = lib.loadSymbol<intAdd_func>("intAdd");
-    auto floatAdd = lib.loadSymbol<floatAdd_func>("floatAdd");
-    auto doubleAdd = lib.loadSymbol<doubleAdd_func>("doubleAdd");
-    auto getPoint = lib.loadSymbol<getPoint_func>("getPoint");
+    auto sayHello   = lib.loadSymbol<sayHello_func>("sayHello");
+    auto intAdd     = lib.loadSymbol<intAdd_func>("intAdd");
+    auto floatAdd   = lib.loadSymbol<floatAdd_func>("floatAdd");
+    auto doubleAdd  = lib.loadSymbol<doubleAdd_func>("doubleAdd");
+    auto getPoint   = lib.loadSymbol<getPoint_func>("getPoint");
     auto printPoint = lib.loadSymbol<printPoint_func>("printPoint");
 
     // 调用函数
@@ -92,7 +93,7 @@ void func()
 }
 
 /// @brief 测试符号信息不存在的情况
-void testNotExistSymbol(const DynamicLibrary &lib)
+void testNotExistSymbol(const dll::DynamicLibrary &lib)
 {
   std::cout << "---------testNotExistSymbol----------" << std::endl;
   // 测试不存在的函数符号加载
