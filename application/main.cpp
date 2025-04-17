@@ -25,7 +25,7 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
-void testNotExistSymbol(const dll::DynamicLibrary &lib);
+void testNotExistSymbol(const dll::dynamic_library &lib);
 int main()
 {
   std::cout << "====================================================" << std::endl;
@@ -47,35 +47,40 @@ void func()
 #endif
 
     // 加载动态库
-    using dll::DynamicLibrary;
-    DynamicLibrary lib0(libPath);
-    DynamicLibrary lib1(libPath);
-    // DynamicLibrary lib = lib0; 错误: 禁止拷贝构造
+    using dll::dynamic_library;
+    dynamic_library lib0(libPath);
+    dynamic_library lib1(libPath);
+    // dynamic_library lib = lib0; 错误: 禁止拷贝构造
     // lib0 = lib1;               错误: 禁止拷贝赋值
 
     lib0 = std::move(lib1);               // 支持移动赋值
-    DynamicLibrary lib(std::move(lib0));  // 支持移动构造
+    dynamic_library lib(std::move(lib0));  // 支持移动构造
+
+    if (lib)
+    {
+      std::cout << "lib is vaild." << std::endl;
+    }
 
     // 加载函数符号
-    auto sayHello   = lib.loadSymbol<sayHello_func>("sayHello");
-    auto intAdd     = lib.loadSymbol<intAdd_func>("intAdd");
-    auto floatAdd   = lib.loadSymbol<floatAdd_func>("floatAdd");
-    auto doubleAdd  = lib.loadSymbol<doubleAdd_func>("doubleAdd");
-    auto getPoint   = lib.loadSymbol<getPoint_func>("getPoint");
-    auto printPoint = lib.loadSymbol<printPoint_func>("printPoint");
+    auto sayHello   = lib.get<sayHello_func>("sayHello");
+    auto intAdd     = lib.get<intAdd_func>("intAdd");
+    auto floatAdd   = lib.get<floatAdd_func>("floatAdd");
+    auto doubleAdd  = lib.get<doubleAdd_func>("doubleAdd");
+    auto getPoint   = lib.get<getPoint_func>("getPoint");
+    auto printPoint = lib.get<printPoint_func>("printPoint");
 
     // 直接调用函数符号
-    int ret = lib.invokeSymbol<int(int, int)>("intAdd", 1, 2);
-    double ret2 = lib.invokeSymbol<double(double, double)>("doubleAdd", 1.8, 2.5);
-    ret = lib.invokeSymbol<int(int, int)>("intAdd", 2, 3);
-    ret = lib.invokeSymbol<int(int, int)>("intAdd", 3, 4);
-    ret = lib.invokeSymbol<int(*)(int, int)>("intAdd", 4, 5);
-    ret = lib.invokeSymbol<int(*)(int, int)>("intAdd", 5, 6);
-    ret = lib.invokeSymbol<int(&)(int, int)>("intAdd", 6, 7);
-    ret = lib.invokeSymbol<int(&)(int, int)>("intAdd", 7, 8);
-    ret = lib.invokeSymbol<int(&&)(int, int)>("intAdd", 8, 9);
-    std::cout << "invokeSymbol: intAdd(8, 9) = " << ret << std::endl;
-    std::cout << "invokeSymbol: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
+    int ret = lib.invoke<int(int, int)>("intAdd", 1, 2);
+    double ret2 = lib.invoke<double(double, double)>("doubleAdd", 1.8, 2.5);
+    ret = lib.invoke<int(int, int)>("intAdd", 2, 3);
+    ret = lib.invoke<int(int, int)>("intAdd", 3, 4);
+    ret = lib.invoke<int(*)(int, int)>("intAdd", 4, 5);
+    ret = lib.invoke<int(*)(int, int)>("intAdd", 5, 6);
+    ret = lib.invoke<int(&)(int, int)>("intAdd", 6, 7);
+    ret = lib.invoke<int(&)(int, int)>("intAdd", 7, 8);
+    ret = lib.invoke<int(&&)(int, int)>("intAdd", 8, 9);
+    std::cout << "invoke: intAdd(8, 9) = " << ret << std::endl;
+    std::cout << "invoke: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
 
     // 调用函数
     sayHello();
@@ -106,18 +111,18 @@ void func()
 }
 
 /// @brief 测试符号信息不存在的情况
-void testNotExistSymbol(const dll::DynamicLibrary &lib)
+void testNotExistSymbol(const dll::dynamic_library &lib)
 {
   std::cout << "---------testNotExistSymbol----------" << std::endl;
   // 测试不存在的函数符号加载
-  auto unknownFunc = lib.tryLoadSymbol<printPoint_func>("notExistFunc");  // 加载失败不抛异常,返回nullptr
+  auto unknownFunc = lib.try_get<printPoint_func>("notExistFunc");  // 加载失败不抛异常,返回nullptr
   if (unknownFunc == nullptr)
   {
-    std::cout << "lib.tryLoadSymbol<printPoint_func>(\"notExistFunc\"); load failed, return nullptr." << std::endl;
+    std::cout << "lib.try_get<printPoint_func>(\"notExistFunc\"); load failed, return nullptr." << std::endl;
   }
   try
   {
-    auto unknownFunc2 = lib.loadSymbol<printPoint_func>("notExistFunc");  // 加载失败抛出异常
+    auto unknownFunc2 = lib.get<printPoint_func>("notExistFunc");  // 加载失败抛出异常
   }
   catch (const std::exception &e)
   {
@@ -126,16 +131,16 @@ void testNotExistSymbol(const dll::DynamicLibrary &lib)
 
   try
   {
-    double ret = lib.invokeSymbol<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
-    std::cout << "lib.invokeSymbol ret = " << ret << std::endl;
-    double ret2 = lib.invokeSymbol<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invokeSymbol ret2 = " << ret2 << std::endl;
-    double ret3 = lib.invokeSymbol<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invokeSymbol ret3 = " << ret3 << std::endl;
+    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
+    std::cout << "lib.invoke ret = " << ret << std::endl;
+    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
+    std::cout << "lib.invoke ret2 = " << ret2 << std::endl;
+    double ret3 = lib.invoke<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
+    std::cout << "lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
   {
-    std::cerr << "invokeSymbol error: " << e.what() << '\n';
+    std::cerr << "invoke error: " << e.what() << '\n';
   }
 
   std::cout << "---------testNotExistSymbol----------" << std::endl;

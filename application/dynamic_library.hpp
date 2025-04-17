@@ -27,6 +27,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *********************************************************************************************************/
 
+#pragma once  // 非标准但广泛支持的写法
 #ifndef DYNAMIC_LIBRARY_H
 #define DYNAMIC_LIBRARY_H
 
@@ -55,14 +56,14 @@ using function_pointer_t = typename function_pointer_traits<T>::type;
 // 定义平台相关的动态库 API
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
-using LibHandle = HMODULE;
+using library_handle = HMODULE;
 
-inline LibHandle loadLibrary(const std::string &path) noexcept
+inline library_handle load_library(const std::string &path) noexcept
 {
   return LoadLibraryA(path.c_str());
 }
 
-inline void unloadLibrary(LibHandle handle) noexcept
+inline void unload_library(library_handle handle) noexcept
 {
   if (handle)
   {
@@ -71,12 +72,12 @@ inline void unloadLibrary(LibHandle handle) noexcept
 }
 
 template <typename Func>
-inline function_pointer_t<Func> loadSymbol(LibHandle handle, const std::string &name) noexcept
+inline function_pointer_t<Func> load_symbol(library_handle handle, const std::string &name) noexcept
 {
   return reinterpret_cast<function_pointer_t<Func>>(GetProcAddress(handle, name.c_str()));
 }
 
-inline std::string getLastError()
+inline std::string get_last_error()
 {
   DWORD error = GetLastError();
   if (error == 0) return "No error";
@@ -100,14 +101,14 @@ inline std::string getLastError()
 #else
 
 #include <dlfcn.h>
-using LibHandle = void *;
+using library_handle = void *;
 
-inline LibHandle loadLibrary(const std::string &path) noexcept
+inline library_handle load_library(const std::string &path) noexcept
 {
   return dlopen(path.c_str(), RTLD_LAZY);
 }
 
-inline void unloadLibrary(LibHandle handle) noexcept
+inline void unload_library(library_handle handle) noexcept
 {
   if (handle)
   {
@@ -116,13 +117,13 @@ inline void unloadLibrary(LibHandle handle) noexcept
 }
 
 template <typename Func>
-inline function_pointer_t<Func> loadSymbol(LibHandle handle, const std::string &name) noexcept
+inline function_pointer_t<Func> load_symbol(library_handle handle, const std::string &name) noexcept
 {
   dlerror();  // 清除之前的错误
   return reinterpret_cast<function_pointer_t<Func>>(dlsym(handle, name.c_str()));
 }
 
-inline std::string getLastError()
+inline std::string get_last_error()
 {
   const char *error = dlerror();
   return error ? std::string(error) : "Unknown error";
@@ -131,10 +132,10 @@ inline std::string getLastError()
 
 }  // namespace detail
 
-using detail::LibHandle;
+using detail::library_handle;
 
 /// @brief 动态库加载类, 使用 RAII 管理动态库资源
-class DynamicLibrary
+class dynamic_library
 {
   template <typename T>
   using function_pointer_t = typename detail::function_pointer_t<T>;
@@ -145,36 +146,36 @@ class DynamicLibrary
    * @param libPath 动态库路径
    * @throw std::runtime_error 如果加载失败, 则抛出异常
    */
-  explicit DynamicLibrary(const std::string &libPath) : handle_(nullptr)
+  explicit dynamic_library(const std::string &libPath) : handle_(nullptr)
   {
     load_handle(libPath);
   }
 
   /// @brief 析构函数 - 自动卸载动态库
-  ~DynamicLibrary()
+  ~dynamic_library()
   {
     unload_handle();
   }
 
   // 禁用拷贝语义, 防止拷贝可能导致的资源管理问题
-  DynamicLibrary(const DynamicLibrary &) = delete;
-  DynamicLibrary &operator=(const DynamicLibrary &) = delete;
+  dynamic_library(const dynamic_library &) = delete;
+  dynamic_library &operator=(const dynamic_library &) = delete;
 
   // 支持移动语义, 便于资源的安全转移 - 移动构造
-  DynamicLibrary(DynamicLibrary &&other) noexcept : handle_(other.handle_), cache_(std::move(other.cache_))
+  dynamic_library(dynamic_library &&other) noexcept : handle_(other.handle_), cache_(std::move(other.cache_))
   {
     other.handle_ = nullptr;
   }
 
   // 支持移动语义, 便于资源的安全转移 - 移动赋值
-  DynamicLibrary &operator=(DynamicLibrary &&rhs) noexcept
+  dynamic_library &operator=(dynamic_library &&rhs) noexcept
   {
     // 常规实现方式
     // if (this != &rhs)
     // {
     //   if (handle_)  // 卸载自身句柄
     //   {
-    //     detail::unloadLibrary(handle_);
+    //     detail::unload_library(handle_);
     //   }
     //   handle_ = rhs.handle_;
     //   cache_ = std::move(rhs.cache_);
@@ -183,17 +184,23 @@ class DynamicLibrary
     // }
 
     // copy-and-swap方式
-    DynamicLibrary tmp(std::move(rhs));  // 用移动构造拿走 rhs 的资源
-    swap(*this, tmp);                    // 安全交换，老对象资源由 tmp 析构释放
-    return *this;                        // tmp 析构，释放旧资源
+    dynamic_library tmp(std::move(rhs));  // 用移动构造拿走 rhs 的资源
+    swap(*this, tmp);                     // 安全交换，老对象资源由 tmp 析构释放
+    return *this;                         // tmp 析构，释放旧资源
   }
 
   // swap 函数：强异常安全，供移动赋值使用
-  friend void swap(DynamicLibrary &lhs, DynamicLibrary &rhs) noexcept
+  friend void swap(dynamic_library &lhs, dynamic_library &rhs) noexcept
   {
     using std::swap;
     swap(lhs.handle_, rhs.handle_);
     swap(lhs.cache_, rhs.cache_);
+  }
+
+  /// @brief 检查动态库是否已加载
+  explicit operator bool() const noexcept
+  {
+    return valid();
   }
 
   /**
@@ -208,12 +215,12 @@ class DynamicLibrary
    *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
   template <typename Func>
-  function_pointer_t<Func> loadSymbol(const std::string &symbolName) const
+  function_pointer_t<Func> get(const std::string &symbolName) const
   {
-    auto symbol = detail::loadSymbol<Func>(handle_, symbolName);
+    auto symbol = detail::load_symbol<Func>(handle_, symbolName);
     if (!symbol)
     {
-      throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::getLastError());
+      throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::get_last_error());
     }
     return symbol;
   }
@@ -228,9 +235,9 @@ class DynamicLibrary
    * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
    */
   template <typename Func>
-  function_pointer_t<Func> tryLoadSymbol(const std::string &symbolName) const noexcept
+  function_pointer_t<Func> try_get(const std::string &symbolName) const noexcept
   {
-    return detail::loadSymbol<Func>(handle_, symbolName);
+    return detail::load_symbol<Func>(handle_, symbolName);
   }
 
   /**
@@ -247,8 +254,7 @@ class DynamicLibrary
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
   template <typename Func, typename... Args>
-  auto invokeSymbol(const std::string &symbolName, Args... args) const
-    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+  auto invoke(const std::string &symbolName, Args... args) const -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
   {
     using func_ptr = function_pointer_t<Func>;
     func_ptr symbol = nullptr;
@@ -262,7 +268,7 @@ class DynamicLibrary
     }
     if (!symbol)  // 未找到符号
     {
-      symbol = loadSymbol<Func>(symbolName);  // 加载符号, 加载失败抛异常
+      symbol = get<Func>(symbolName);  // 加载符号, 加载失败抛异常
       {
         std::lock_guard<std::mutex> lock(mtx_);
         cache_.emplace(symbolName, reinterpret_cast<void *>(symbol));  // 添加缓存
@@ -273,7 +279,7 @@ class DynamicLibrary
 
   /// @brief 检查动态库是否已加载
   /// @return 如果已加载, 返回 true; 否则返回 false
-  bool isLoaded() const noexcept
+  bool valid() const noexcept
   {
     return handle_ != nullptr;
   }
@@ -296,9 +302,9 @@ class DynamicLibrary
   /// @brief 获取动态库底层原生句柄 (Windows 的 `HMODULE` 或 POSIX 的 `void*`)
   /// @return 底层原生句柄
   /// @note
-  /// - 返回的句柄是操作系统的原生句柄, 直接操作时请小心.确保 `DynamicLibrary` 对象的生命周期有效,
+  /// - 返回的句柄是操作系统的原生句柄, 直接操作时请小心.确保 `dynamic_library` 对象的生命周期有效,
   ///   避免在销毁前手动释放或操作句柄.不正确的手动操作句柄可能导致资源泄露或不正确的资源管理(破坏RAII机制).
-  LibHandle nativeHandle() const noexcept
+  library_handle native_handle() const noexcept
   {
     return handle_;
   }
@@ -308,10 +314,10 @@ class DynamicLibrary
   /// @param libPath 动态库路径
   void load_handle(const std::string &libPath)
   {
-    handle_ = detail::loadLibrary(libPath);
+    handle_ = detail::load_library(libPath);
     if (!handle_)
     {
-      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::getLastError());
+      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::get_last_error());
     }
   }
 
@@ -320,7 +326,7 @@ class DynamicLibrary
   {
     if (handle_)  // 只有在 handle 非 nullptr 时才卸载
     {
-      detail::unloadLibrary(handle_);
+      detail::unload_library(handle_);
       handle_ = nullptr;
     }
   }
@@ -333,7 +339,7 @@ class DynamicLibrary
   }
 
  private:
-  LibHandle handle_ = nullptr;                             // 动态库句柄
+  library_handle handle_ = nullptr;                        // 动态库句柄
   mutable std::unordered_map<std::string, void *> cache_;  // 符号缓存
   mutable std::mutex mtx_;                                 // 互斥锁, 保护符号缓存线程安全
 };
