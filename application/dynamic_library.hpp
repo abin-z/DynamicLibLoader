@@ -157,24 +157,40 @@ class DynamicLibrary
   DynamicLibrary &operator=(const DynamicLibrary &) = delete;
 
   // 支持移动语义, 便于资源的安全转移 - 移动构造
-  DynamicLibrary(DynamicLibrary &&other) noexcept : handle_(other.handle_)
+  DynamicLibrary(DynamicLibrary &&other) noexcept : handle_(other.handle_), cache_(std::move(other.cache_))
   {
     other.handle_ = nullptr;
+    other.cache_.clear();
   }
 
   // 支持移动语义, 便于资源的安全转移 - 移动赋值
-  DynamicLibrary &operator=(DynamicLibrary &&other) noexcept
+  DynamicLibrary &operator=(DynamicLibrary &&rhs) noexcept
   {
-    if (this != &other)
-    {
-      if (handle_)  // 卸载自身句柄
-      {
-        detail::unloadLibrary(handle_);
-      }
-      handle_ = other.handle_;
-      other.handle_ = nullptr;
-    }
-    return *this;
+    // 常规实现方式
+    // if (this != &rhs)
+    // {
+    //   if (handle_)  // 卸载自身句柄
+    //   {
+    //     detail::unloadLibrary(handle_);
+    //   }
+    //   handle_ = rhs.handle_;
+    //   cache_ = std::move(rhs.cache_);
+    //   rhs.handle_ = nullptr;
+    //   rhs.cache_.clear();
+    // }
+
+    // copy-and-swap方式
+    DynamicLibrary tmp(std::move(rhs));  // 用移动构造拿走 rhs 的资源
+    swap(*this, tmp);                    // 安全交换，老对象资源由 tmp 析构释放
+    return *this;                        // tmp 析构，释放旧资源
+  }
+
+  // swap 函数：强异常安全，供移动赋值使用
+  friend void swap(DynamicLibrary &lhs, DynamicLibrary &rhs) noexcept
+  {
+    using std::swap;
+    swap(lhs.handle_, rhs.handle_);
+    swap(lhs.cache_, rhs.cache_);
   }
 
   /**
@@ -252,7 +268,7 @@ class DynamicLibrary
   /// @note
   /// - 返回的句柄是操作系统的原生句柄, 直接操作时请小心.确保 `DynamicLibrary` 对象的生命周期有效,
   ///   避免在销毁前手动释放或操作句柄.不正确的手动操作句柄可能导致资源泄露或不正确的资源管理(破坏RAII机制).
-  LibHandle nativeHandle()
+  LibHandle nativeHandle() const noexcept
   {
     return handle_;
   }
