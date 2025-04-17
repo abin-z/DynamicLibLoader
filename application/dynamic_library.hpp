@@ -30,10 +30,12 @@
 #ifndef DYNAMIC_LIBRARY_H
 #define DYNAMIC_LIBRARY_H
 
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 
 namespace dll
 {
@@ -160,7 +162,6 @@ class DynamicLibrary
   DynamicLibrary(DynamicLibrary &&other) noexcept : handle_(other.handle_), cache_(std::move(other.cache_))
   {
     other.handle_ = nullptr;
-    other.cache_.clear();
   }
 
   // 支持移动语义, 便于资源的安全转移 - 移动赋值
@@ -247,13 +248,25 @@ class DynamicLibrary
   auto invokeSymbol(const std::string &symbolName, Args... args) const
     -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
   {
-    auto it = cache_.find(symbolName);
-    if (it == cache_.end())
+    using func_ptr = function_pointer_t<Func>;
+    func_ptr symbol = nullptr;
     {
-      auto symbol = loadSymbol<Func>(symbolName);                               // 加载符号
-      it = cache_.emplace(symbolName, reinterpret_cast<void *>(symbol)).first;  // 缓存符号
+      std::lock_guard<std::mutex> lock(mtx_);
+      auto it = cache_.find(symbolName);  // 查找缓存
+      if (it != cache_.end())             // 找到了符号
+      {
+        symbol = reinterpret_cast<func_ptr>(it->second);
+      }
     }
-    return reinterpret_cast<function_pointer_t<Func>>(it->second)(std::forward<Args>(args)...);
+    if (!symbol)  // 未找到符号
+    {
+      symbol = loadSymbol<Func>(symbolName);  // 加载符号, 加载失败抛异常
+      {
+        std::lock_guard<std::mutex> lock(mtx_);
+        cache_.emplace(symbolName, reinterpret_cast<void *>(symbol));  // 添加缓存
+      }
+    }
+    return symbol(std::forward<Args>(args)...);  // 直接调用
   }
 
   /// @brief 检查动态库是否已加载
@@ -276,6 +289,7 @@ class DynamicLibrary
  private:
   LibHandle handle_ = nullptr;                             // 动态库句柄
   mutable std::unordered_map<std::string, void *> cache_;  // 符号缓存
+  mutable std::mutex mtx_;                                 // 互斥锁, 保护符号缓存线程安全
 };
 
 }  // namespace dll
