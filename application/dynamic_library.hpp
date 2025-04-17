@@ -45,7 +45,7 @@ namespace detail
 template <typename T>
 struct function_pointer_traits
 {
-  using type = typename std::remove_pointer<typename std::remove_reference<T>::type>::type *;
+  using type = typename std::add_pointer<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
 };
 
 /// @brief 通用函数指针类型别名
@@ -79,11 +79,21 @@ inline function_pointer_t<Func> loadSymbol(LibHandle handle, const std::string &
 inline std::string getLastError()
 {
   DWORD error = GetLastError();
-  LPVOID msgBuffer;
+  if (error == 0) return "No error";
+
+  LPVOID msgBuffer = nullptr;
   size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
                                error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
-  std::string message((LPSTR)msgBuffer, size);
-  LocalFree(msgBuffer);
+  std::string message;
+  if (size && msgBuffer)
+  {
+    message.assign((LPSTR)msgBuffer, size);
+    LocalFree(msgBuffer);
+  }
+  else
+  {
+    message = "Unknown error";
+  }
   return "Error Code: " + std::to_string(error) + " - " + message;
 }
 
@@ -137,21 +147,13 @@ class DynamicLibrary
    */
   explicit DynamicLibrary(const std::string &libPath) : handle_(nullptr)
   {
-    handle_ = detail::loadLibrary(libPath);
-    if (!handle_)
-    {
-      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::getLastError());
-    }
+    load_handle(libPath);
   }
 
   /// @brief 析构函数 - 自动卸载动态库
   ~DynamicLibrary()
   {
-    if (handle_)  // 只有在 handle 非 nullptr 时才卸载
-    {
-      detail::unloadLibrary(handle_);
-      handle_ = nullptr;
-    }
+    unload_handle();
   }
 
   // 禁用拷贝语义, 防止拷贝可能导致的资源管理问题
@@ -276,6 +278,21 @@ class DynamicLibrary
     return handle_ != nullptr;
   }
 
+  /// @brief 卸载原来的动态库, 重新加载动态库, 加载失败抛出异常`std::runtime_error`
+  /// @param libPath 新的动态库路径
+  void reload(const std::string &libPath)
+  {
+    unload();
+    load_handle(libPath);
+  }
+
+  /// @brief 显式释放动态库资源(提前释放)
+  void unload() noexcept
+  {
+    unload_handle();
+    clear_cache();
+  }
+
   /// @brief 获取动态库底层原生句柄 (Windows 的 `HMODULE` 或 POSIX 的 `void*`)
   /// @return 底层原生句柄
   /// @note
@@ -284,6 +301,35 @@ class DynamicLibrary
   LibHandle nativeHandle() const noexcept
   {
     return handle_;
+  }
+
+ private:
+  /// @brief 只加载动态库, 加载失败抛出异常`std::runtime_error`
+  /// @param libPath 动态库路径
+  void load_handle(const std::string &libPath)
+  {
+    handle_ = detail::loadLibrary(libPath);
+    if (!handle_)
+    {
+      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::getLastError());
+    }
+  }
+
+  /// @brief 只是卸载动态库
+  void unload_handle() noexcept
+  {
+    if (handle_)  // 只有在 handle 非 nullptr 时才卸载
+    {
+      detail::unloadLibrary(handle_);
+      handle_ = nullptr;
+    }
+  }
+
+  /// @brief 清除符号表缓存
+  void clear_cache() const noexcept
+  {
+    std::lock_guard<std::mutex> lock(mtx_);
+    cache_.clear();
   }
 
  private:
