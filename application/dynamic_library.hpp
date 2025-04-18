@@ -1,7 +1,7 @@
 /*********************************************************************************************************
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * @file: dynamic_library.hpp
- * @version: v0.9.0
+ * @version: v0.9.1
  * @description: Cross-platform dynamic library explicit loader
  *    - This class provides a cross-platform way to explicitly load dynamic libraries.
  *    - It uses conditional compilation to handle differences between Windows and POSIX platforms (such as Linux and macOS).
@@ -183,9 +183,9 @@ class dynamic_library
     //   rhs.cache_.clear();
     // }
 
-    // copy-and-swap方式
-    dynamic_library tmp(std::move(rhs));  // 用移动构造拿走 rhs 的资源
-    swap(*this, tmp);                     // 安全交换，老对象资源由 tmp 析构释放
+    // move-and-swap方式(自赋值安全, 异常安全)
+    dynamic_library tmp(std::move(rhs));  // tmp用移动构造拿走 rhs 的资源
+    swap(*this, tmp);                     // 当前对象和 tmp 交换，tmp 拿到旧资源
     return *this;                         // tmp 析构，释放旧资源
   }
 
