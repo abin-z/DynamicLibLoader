@@ -207,7 +207,7 @@ class dynamic_library
    * @brief 加载符号, 加载失败抛出异常(异常导向式API)
    *
    * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
-   * @param symbolName 符号名称, 指定要加载的符号的名称
+   * @param symbol_name 符号名称, 指定要加载的符号的名称
    * @return 返回加载的符号地址
    * @throw std::runtime_error 如果加载符号失败, 则抛出异常
    *
@@ -215,12 +215,12 @@ class dynamic_library
    *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
   template <typename Func>
-  function_pointer_t<Func> get(const std::string &symbolName) const
+  function_pointer_t<Func> get(const std::string &symbol_name) const
   {
-    auto symbol = detail::load_symbol<Func>(handle_, symbolName);
+    auto symbol = detail::load_symbol<Func>(handle_, symbol_name);
     if (!symbol)
     {
-      throw std::runtime_error("Failed to load symbol: " + symbolName + " - " + detail::get_last_error());
+      throw std::runtime_error("Failed to load symbol: " + symbol_name + " - " + detail::get_last_error());
     }
     return symbol;
   }
@@ -229,15 +229,15 @@ class dynamic_library
    * @brief 尝试加载符号, 加载失败时不抛出异常, 而是返回 nullptr
    *
    * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
-   * @param symbolName 符号名称, 指定要加载的符号的名称
+   * @param symbol_name 符号名称, 指定要加载的符号的名称
    * @return 返回加载的符号地址, 如果加载失败返回 nullptr
    *
    * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
    */
   template <typename Func>
-  function_pointer_t<Func> try_get(const std::string &symbolName) const noexcept
+  function_pointer_t<Func> try_get(const std::string &symbol_name) const noexcept
   {
-    return detail::load_symbol<Func>(handle_, symbolName);
+    return detail::load_symbol<Func>(handle_, symbol_name);
   }
 
   /**
@@ -245,7 +245,7 @@ class dynamic_library
    *
    * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
    * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
-   * @param symbolName 符号名称, 指定要调用的符号的名称
+   * @param symbol_name 符号名称, 指定要调用的符号的名称
    * @param args 可变参数, 传递给函数的参数
    * @return 返回函数调用的结果
    * @throw `std::runtime_error` 如果加载符号失败, 则抛出异常
@@ -254,27 +254,34 @@ class dynamic_library
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
   template <typename Func, typename... Args>
-  auto invoke(const std::string &symbolName, Args... args) const -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+  auto invoke(const std::string &symbol_name, Args... args) const -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
   {
     using func_ptr = function_pointer_t<Func>;
     func_ptr symbol = nullptr;
     {
       std::lock_guard<std::mutex> lock(mtx_);
-      auto it = cache_.find(symbolName);  // 查找缓存
-      if (it != cache_.end())             // 找到了符号
+      auto it = cache_.find(symbol_name);  // 查找缓存
+      if (it != cache_.end())              // 找到了符号
       {
         symbol = reinterpret_cast<func_ptr>(it->second);
       }
     }
     if (!symbol)  // 未找到符号
     {
-      symbol = get<Func>(symbolName);  // 加载符号, 加载失败抛异常
+      symbol = get<Func>(symbol_name);  // 加载符号, 加载失败抛异常
       {
         std::lock_guard<std::mutex> lock(mtx_);
-        cache_.emplace(symbolName, reinterpret_cast<void *>(symbol));  // 添加缓存
+        cache_.emplace(symbol_name, reinterpret_cast<void *>(symbol));  // 添加缓存
       }
     }
     return symbol(std::forward<Args>(args)...);  // 直接调用
+  }
+
+  template <typename Func, typename... Args>
+  auto invoke_uncached(const std::string &symbol_name, Args... args) const
+    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+  {
+    return get<Func>(symbol_name)(std::forward<Args>(args)...);  // 直接调用
   }
 
   /// @brief 检查动态库是否已加载

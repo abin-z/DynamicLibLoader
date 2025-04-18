@@ -1,5 +1,5 @@
 BasedOnStyle: Google  # 继承 Google 风格
-ColumnLimit: 130      # 单行最大字符数130
+ColumnLimit: 120      # 单行最大字符数120
 IndentWidth: 2        # 缩进宽度2
 UseTab: Never         # 使用空格缩进
 TabWidth: 2           # Tab 宽度2
@@ -20,7 +20,7 @@ BraceWrapping:
   AfterEnum: true        # ✅ 枚举的大括号换行
   AfterControlStatement: true  # ✅ if/for/while 换行
   BeforeElse: true       # ✅  else 换行
-  BeforeCatch: true      # ✅ catch 大括号也换行
+  BeforeCatch: true      # ✅  catch 大括号也换行
   IndentBraces: false    # ❌ 大括号不额外缩进
 
 ##############################################################
