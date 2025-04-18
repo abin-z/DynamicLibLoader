@@ -79,8 +79,10 @@ void func()
     ret = lib.invoke<int(&)(int, int)>("intAdd", 6, 7);
     ret = lib.invoke<int(&)(int, int)>("intAdd", 7, 8);
     ret = lib.invoke<int(&&)(int, int)>("intAdd", 8, 9);
+    double ret3 = lib.invoke_uncached<double(double, double)>("doubleAdd", 1.8, 2.5);
     std::cout << "invoke: intAdd(8, 9) = " << ret << std::endl;
     std::cout << "invoke: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
+    std::cout << "invoke_uncached: doubleAdd(1.8, 2.5) = " << ret3 << std::endl;
 
     // 调用函数
     sayHello();

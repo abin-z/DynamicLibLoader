@@ -4,7 +4,8 @@
  * @version: v0.9.1
  * @description: Cross-platform dynamic library explicit loader
  *    - This class provides a cross-platform way to explicitly load dynamic libraries.
- *    - It uses conditional compilation to handle differences between Windows and POSIX platforms (such as Linux and macOS).
+ *    - It uses conditional compilation to handle differences between Windows and POSIX platforms
+ *      (such as Linux and macOS).
  *
  * Key Features:
  * 1. Unified Dynamic Library API:
@@ -46,7 +47,8 @@ namespace detail
 template <typename T>
 struct function_pointer_traits
 {
-  using type = typename std::add_pointer<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
+  using type =
+    typename std::add_pointer<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
 };
 
 /// @brief 通用函数指针类型别名
@@ -83,8 +85,9 @@ inline std::string get_last_error()
   if (error == 0) return "No error";
 
   LPVOID msgBuffer = nullptr;
-  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-                               error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
+  size_t size =
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                   error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
   std::string message;
   if (size && msgBuffer)
   {
@@ -184,7 +187,7 @@ class dynamic_library
     // }
 
     // move-and-swap方式(自赋值安全, 异常安全)
-    dynamic_library tmp(std::move(rhs));  // tmp用移动构造拿走 rhs 的资源
+    dynamic_library tmp(std::move(rhs));  // tmp 用移动构造拿走 rhs 的资源
     swap(*this, tmp);                     // 当前对象和 tmp 交换，tmp 拿到旧资源
     return *this;                         // tmp 析构，释放旧资源
   }
@@ -241,7 +244,7 @@ class dynamic_library
   }
 
   /**
-   * @brief 调用动态库中的符号, 支持参数转发
+   * @brief 调用动态库中的符号, 支持参数转发(调用后会缓存函数)
    *
    * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
    * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
@@ -254,7 +257,8 @@ class dynamic_library
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
   template <typename Func, typename... Args>
-  auto invoke(const std::string &symbol_name, Args... args) const -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+  auto invoke(const std::string &symbol_name, Args... args) const
+    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
   {
     using func_ptr = function_pointer_t<Func>;
     func_ptr symbol = nullptr;
@@ -274,14 +278,27 @@ class dynamic_library
         cache_.emplace(symbol_name, reinterpret_cast<void *>(symbol));  // 添加缓存
       }
     }
-    return symbol(std::forward<Args>(args)...);  // 直接调用
+    return symbol(std::forward<Args>(args)...);  // 调用函数
   }
 
+  /**
+   * @brief 调用动态库中的符号, 支持参数转发(不使用缓存)
+   *
+   * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
+   * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
+   * @param symbol_name 符号名称, 指定要调用的符号的名称
+   * @param args 可变参数, 传递给函数的参数
+   * @return 返回函数调用的结果
+   * @throw `std::runtime_error` 如果加载符号失败, 则抛出异常
+   *
+   * @note 该函数会尝试加载并调用动态库中的指定符号.如果符号不存在或加载失败,
+   *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
+   */
   template <typename Func, typename... Args>
   auto invoke_uncached(const std::string &symbol_name, Args... args) const
     -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
   {
-    return get<Func>(symbol_name)(std::forward<Args>(args)...);  // 直接调用
+    return get<Func>(symbol_name)(std::forward<Args>(args)...);  // 直接调用函数
   }
 
   /// @brief 检查动态库是否已加载
