@@ -8,15 +8,15 @@
 
 - ✅ **RAII 资源管理**: 动态库在构造时加载，在析构时卸载，避免资源泄露.
 
-- ✅ **异常安全**: 加载库或符号失败时抛出详细的 `std::runtime_error`，附带平台错误信息.
+- ✅ **错误处理**:  在加载库或符号失败时，抛出详细的 `std::runtime_error` 异常，并附带平台特定的错误消息.
 
-- **✅ 符号缓存**：`invoke()`支持符号缓存，提高符号加载效率.
+- ✅ **符号缓存**：`invoke()`支持符号缓存，提高符号加载效率.
 
 - ✅ **线程安全缓存**: `invoke()`成功调用后会缓存已加载的符号指针，提高调用效率.
 
 - ✅ **缓存与非缓存调用接口**: 提供 `invoke()`（自动缓存）和 `invoke_uncached()`（不缓存）两种调用方式.
 
-- **✅ 无依赖**：仅依赖标准库，不依赖任何外部库.
+- ✅ **无依赖**：仅依赖标准库，不依赖任何外部库.
 
 - ✅ **支持多种函数类型:**
 
@@ -295,9 +295,9 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
     double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
     std::cout << "lib.invoke ret = " << ret << std::endl;
     double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invoke ret2 = " << ret2 << std::endl;
+    std::cout << "[UB] lib.invoke ret2 = " << ret2 << std::endl;
     double ret3 = lib.invoke<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invoke ret3 = " << ret3 << std::endl;
+    std::cout << "[UB] lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
   {
