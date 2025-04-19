@@ -1,25 +1,19 @@
 /*********************************************************************************************************
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * @file: dynamic_library.hpp
- * @version: v0.9.1
+ * @version: v0.9.2
  * @description: Cross-platform dynamic library explicit loader
- *    - This class provides a cross-platform way to explicitly load dynamic libraries.
- *    - It uses conditional compilation to handle differences between Windows and POSIX platforms
- *      (such as Linux and macOS).
+ *    - Provides a cross-platform way to load dynamic libraries.
+ *    - Uses conditional compilation for platform-specific handling (Windows vs POSIX: Linux/macOS).
  *
  * Key Features:
- * 1. Unified Dynamic Library API:
- *    - Uses `LoadLibraryA` and `GetProcAddress` on Windows.
- *    - Uses `dlopen` and `dlsym` on POSIX-compliant systems.
- * 2. Error Handling:
- *    - On Windows, retrieves detailed error messages via `GetLastError` and `FormatMessageA`.
- *    - On POSIX, uses `dlerror` for error reporting.
- * 3. Unified Handle Abstraction:
- *    - Uses `HMODULE` as the library handle on Windows.
- *    - Uses `void*` on POSIX systems.
- * 4. Platform Detection via Conditional Compilation:
- *    - Uses `#if defined(_WIN32) || defined(_WIN64)` to detect Windows.
- *    - Defaults to POSIX implementation on other platforms.
+ *    - Cross-platform support: Compatible with Windows and POSIX (Linux/macOS).
+ *    - RAII Resource Management: Loads the library on construction and unloads it on destruction.
+ *    - Error Handling: Throws detailed `std::runtime_error` exceptions with platform-specific error messages
+ *      when failing to load the library or symbols.
+ *    - Symbol Caching: `invoke()` supports symbol caching for improved efficiency.
+ *    - Cached and Uncached Interfaces: Use `invoke()` (cached) or `invoke_uncached()` (non-cached).
+ *    - No Dependencies: Relies solely on the standard library.
  *
  * @author: abin
  * @date: 2025-01-19
