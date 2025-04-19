@@ -136,9 +136,9 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
     double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
     std::cout << "lib.invoke ret = " << ret << std::endl;
     double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invoke ret2 = " << ret2 << std::endl;
+    std::cout << "[UB] lib.invoke ret2 = " << ret2 << std::endl;
     double ret3 = lib.invoke<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
-    std::cout << "lib.invoke ret3 = " << ret3 << std::endl;
+    std::cout << "[UB] lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
   {
