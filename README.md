@@ -4,7 +4,7 @@
 
 ### 核心特性概览:
 
-- ✅ **跨平台支持**: 兼容 Windows 和 POSIX（Linux/macOS）.
+- ✅ **跨平台支持**: 兼容 Windows 和 POSIX (Linux/macOS).
 
 - ✅ **RAII 资源管理**: 动态库在构造时加载，在析构时卸载，避免资源泄露.
 
@@ -16,7 +16,7 @@
 
 - ✅ **缓存与非缓存调用接口**: 提供 `invoke()`（自动缓存）和 `invoke_uncached()`（不缓存）两种调用方式.
 
-- ✅ **无依赖**：仅依赖标准库，不依赖任何外部库.
+- ✅ **无依赖**：仅依赖标准库和系统库，不依赖任何第三方库.
 
 - ✅ **支持多种函数类型:**
 
@@ -29,7 +29,11 @@
 
 ### 使用方法
 
-Header-only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目文件夹`#include "dynamic_library.hpp"`即可使用.
+Header-only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
+
+```cpp
+#include "dynamic_library.hpp"
+```
 
 ### 基础案例
 
@@ -134,13 +138,13 @@ catch (const std::exception &e)
 
 ```sh
 .
-├── application					# 2.使用本库加载dynamic生成的动态库
+├── application                     # 2.使用本库加载dynamic生成的动态库
 │   ├── CMakeLists.txt
 │   ├── dynamic_library.hpp
 │   └── main.cpp
 ├── docs
 │   └── 动态库的加载方式介绍.md
-├── dynamic						# 1.生成dynamic动态库供application调用
+├── dynamic                         # 1.生成dynamic动态库供application调用
 │   ├── CMakeLists.txt
 │   ├── include
 │   │   └── dynamic
