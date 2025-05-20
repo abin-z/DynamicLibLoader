@@ -47,14 +47,13 @@ void func()
 #endif
 
     // 加载动态库
-    using dll::dynamic_library;
-    dynamic_library lib0(libPath);
-    dynamic_library lib1(libPath);
-    // dynamic_library lib = lib0; 错误: 禁止拷贝构造
-    // lib0 = lib1;               错误: 禁止拷贝赋值
+    dll::dynamic_library lib0(libPath);
+    dll::dynamic_library lib1(libPath);
+    // dll::dynamic_library lib = lib0;  错误: 禁止拷贝构造
+    // lib0 = lib1;                      错误: 禁止拷贝赋值
 
-    lib0 = std::move(lib1);               // 支持移动赋值
-    dynamic_library lib(std::move(lib0));  // 支持移动构造
+    lib0 = std::move(lib1);                     // 支持移动赋值
+    dll::dynamic_library lib(std::move(lib0));  // 支持移动构造
 
     if (lib)
     {
@@ -74,11 +73,11 @@ void func()
     double ret2 = lib.invoke<double(double, double)>("doubleAdd", 1.8, 2.5);
     ret = lib.invoke<int(int, int)>("intAdd", 2, 3);
     ret = lib.invoke<int(int, int)>("intAdd", 3, 4);
-    ret = lib.invoke<int(*)(int, int)>("intAdd", 4, 5);
-    ret = lib.invoke<int(*)(int, int)>("intAdd", 5, 6);
-    ret = lib.invoke<int(&)(int, int)>("intAdd", 6, 7);
-    ret = lib.invoke<int(&)(int, int)>("intAdd", 7, 8);
-    ret = lib.invoke<int(&&)(int, int)>("intAdd", 8, 9);
+    ret = lib.invoke<int (*)(int, int)>("intAdd", 4, 5);
+    ret = lib.invoke<int (*)(int, int)>("intAdd", 5, 6);
+    ret = lib.invoke<int (&)(int, int)>("intAdd", 6, 7);
+    ret = lib.invoke<int (&)(int, int)>("intAdd", 7, 8);
+    ret = lib.invoke<int (&&)(int, int)>("intAdd", 8, 9);
     double ret3 = lib.invoke_uncached<double(double, double)>("doubleAdd", 1.8, 2.5);
     std::cout << "invoke: intAdd(8, 9) = " << ret << std::endl;
     std::cout << "invoke: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
@@ -133,11 +132,14 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
 
   try
   {
-    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
+    // 正常调用: symbol是对的, 函数签名也正常
+    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  
     std::cout << "lib.invoke ret = " << ret << std::endl;
-    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
+    // 未定义行为: symbol是对的,但是函数签名不一致
+    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  
     std::cout << "[UB] lib.invoke ret2 = " << ret2 << std::endl;
-    double ret3 = lib.invoke<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
+    // 未定义行为: symbol是对的,但是函数签名不一致
+    double ret3 = lib.invoke<double()>("doubleAdd");  
     std::cout << "[UB] lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
