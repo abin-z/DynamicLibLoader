@@ -25,6 +25,7 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
+void testHasSymbol(const dll::dynamic_library &lib);
 void testGetVariable(const dll::dynamic_library &lib);
 void testGetVariable2(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
@@ -104,6 +105,7 @@ void func()
     printPoint(p);
     std::cout << std::endl;
 
+    testHasSymbol(lib);
     testGetVariable(lib);
     testGetVariable2(lib);
 
@@ -114,6 +116,24 @@ void func()
     std::cerr << "Error: " << ex.what() << std::endl;
     return;
   }
+}
+
+void testHasSymbol(const dll::dynamic_library &lib)
+{
+  std::cout << "------ testHasSymbol ------" << std::endl;
+
+  std::cout << "has_symbol(\"intAdd\"): " << lib.has_symbol("intAdd") << std::endl;
+  std::cout << "has_symbol(\"g_version\"): " << lib.has_symbol("g_version") << std::endl;
+  std::cout << "has_symbol(\"non_exist\"): " << lib.has_symbol("non_exist") << std::endl;
+  std::cout << "has_symbol(\"floatAdd\"): " << lib.has_symbol("floatAdd") << std::endl;
+  std::cout << "has_symbol(\"g_point\"): " << lib.has_symbol("g_point") << std::endl;
+  std::cout << "has_symbol(\"g_point_ptr\"): " << lib.has_symbol("g_point_ptr") << std::endl;
+  std::cout << "has_symbol(\"g_point_ptr\"): " << lib.has_symbol("g_point_ptr") << std::endl;
+  std::cout << "has_symbol(\"g_point_ptr\"): " << lib.has_symbol("g_point_ptr") << std::endl;
+  std::cout << "has_symbol(\"g_point_ptr\"): " << lib.has_symbol("g_point_ptr") << std::endl;
+  std::cout << "has_symbol(\"g_point_ptr0\"): " << lib.has_symbol("g_point_ptr1") << std::endl;
+
+  std::cout << "------ testHasSymbol ------" << std::endl;
 }
 
 /// @brief 测试获取动态库中的变量
