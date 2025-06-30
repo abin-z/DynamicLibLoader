@@ -119,19 +119,34 @@ void testGetVariable(const dll::dynamic_library &lib)
 {
   std::cout << "--------- testGetVariable ----------" << std::endl;
 
+  // 获取动态库版本号, 注意需要是 const char **
+  const char **version = lib.get<const char **>("g_version");
+  std::cout << "g_version ptr = " << static_cast<const void*>(version) << std::endl;
+  if (version)
+  {
+    std::cout << "Dynamic Library Version: " << *version << std::endl;
+  }
+  else
+  {
+    std::cout << "Failed to load version string" << std::endl;
+  }
+
+  // 获取动态库变量
   int *counter = lib.get<int *>("g_counter");
   std::cout << "g_counter addr = " << static_cast<void *>(counter) << ", value = " << (counter ? *counter : -1)
             << std::endl;
-
+  // 获取动态库指针变量
   int **counter_ptr = lib.get<int **>("g_counter_ptr");
   std::cout << "g_counter_ptr addr = " << static_cast<void *>(counter_ptr)
             << ", value = " << (counter_ptr && *counter_ptr ? **counter_ptr : -1) << std::endl;
 
+  // 获取动态库结构体变量
   point_t *point = lib.get<point_t *>("g_point");
   std::cout << "g_point addr = " << static_cast<void *>(point);
   if (point) std::cout << ", value = (" << point->x << ", " << point->y << ", " << point->z << ")";
   std::cout << std::endl;
 
+  // 获取动态库结构体指针变量
   point_t **point_ptr = lib.get<point_t **>("g_point_ptr");
   std::cout << "g_point_ptr addr = " << static_cast<void *>(point_ptr);
   if (point_ptr && *point_ptr)
