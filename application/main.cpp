@@ -26,6 +26,7 @@ using printPoint_func = void (*)(point_t);
 
 void func();
 void testGetVariable(const dll::dynamic_library &lib);
+void testGetVariable2(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
 int main()
 {
@@ -104,6 +105,7 @@ void func()
     std::cout << std::endl;
 
     testGetVariable(lib);
+    testGetVariable2(lib);
 
     testNotExistSymbol(lib);
   }
@@ -119,12 +121,41 @@ void testGetVariable(const dll::dynamic_library &lib)
 {
   std::cout << "--------- testGetVariable ----------" << std::endl;
 
+  // 获取动态库版本号
+  const char *version = lib.get_variable<const char *>("g_version");
+  std::cout << "[get_variable] Dynamic Library Version: " << version << std::endl;
+
+  // 获取动态库变量
+  int counter = lib.get_variable<int>("g_counter");
+  std::cout << "[get_variable] g_counter value = " << counter << std::endl;
+
+  // 获取动态库指针变量
+  int *counter_ptr = lib.get_variable<int *>("g_counter_ptr");
+  std::cout << "[get_variable] g_counter_ptr value = " << *counter_ptr << std::endl;
+
+  // 获取动态库结构体变量
+  point_t point = lib.get_variable<point_t>("g_point");
+  std::cout << "[get_variable] g_point value x = " << point.x << ", y = " << point.y << ", z = " << point.z << std::endl;
+
+  // 获取动态库结构体指针变量
+  point_t *point_ptr = lib.get_variable<point_t *>("g_point_ptr");
+  std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y << ", z = " << point_ptr->z
+            << std::endl;
+
+  std::cout << "--------- testGetVariable ----------" << std::endl;
+}
+
+void testGetVariable2(const dll::dynamic_library &lib)
+{
+  std::cout << "--------- testGetVariable2 ----------" << std::endl;
+
   // 获取动态库版本号, 注意需要是 const char **
   const char **version = lib.get<const char **>("g_version");
-  std::cout << "g_version ptr = " << static_cast<const void*>(version) << std::endl;
+  const char *ver = lib.get_variable<const char *>("g_version");
+  std::cout << "g_version ptr = " << static_cast<const void *>(version) << std::endl;
   if (version)
   {
-    std::cout << "Dynamic Library Version: " << *version << std::endl;
+    std::cout << "Dynamic Library Version: " << *version << ", " << ver << std::endl;
   }
   else
   {
@@ -141,7 +172,7 @@ void testGetVariable(const dll::dynamic_library &lib)
             << ", value = " << (counter_ptr && *counter_ptr ? **counter_ptr : -1) << std::endl;
 
   // 获取动态库结构体变量
-  point_t *point = lib.get<point_t *>("g_point");
+  point_t *point = lib.get<point_t>("g_point");
   std::cout << "g_point addr = " << static_cast<void *>(point);
   if (point) std::cout << ", value = (" << point->x << ", " << point->y << ", " << point->z << ")";
   std::cout << std::endl;
@@ -153,7 +184,7 @@ void testGetVariable(const dll::dynamic_library &lib)
     std::cout << ", value = (" << (*point_ptr)->x << ", " << (*point_ptr)->y << ", " << (*point_ptr)->z << ")";
   std::cout << std::endl;
 
-  std::cout << "--------- testGetVariable ----------" << std::endl;
+  std::cout << "--------- testGetVariable2 ----------" << std::endl;
 }
 
 /// @brief 测试符号信息不存在的情况
