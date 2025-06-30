@@ -141,6 +141,8 @@ class dynamic_library
   using symbol_pointer_t = typename detail::symbol_pointer_t<T>;
 
  public:
+  dynamic_library() = default;  // 默认构造函数, handle_为nullptr
+
   /**
    * @brief 构造函数, 加载指定路径的动态库
    * @param libPath 动态库路径
@@ -233,6 +235,10 @@ class dynamic_library
   template <typename F>
   symbol_pointer_t<F> get(const std::string &symbol_name) const
   {
+    if (!handle_)
+    {
+      throw std::runtime_error("Dynamic library not loaded");
+    }
     auto symbol = detail::load_symbol<F>(handle_, symbol_name);
     if (!symbol)
     {
@@ -253,6 +259,7 @@ class dynamic_library
   template <typename F>
   symbol_pointer_t<F> try_get(const std::string &symbol_name) const noexcept
   {
+    if (!handle_) return nullptr;
     return detail::load_symbol<F>(handle_, symbol_name);
   }
 
@@ -353,9 +360,9 @@ class dynamic_library
     return handle_ != nullptr;
   }
 
-  /// @brief 卸载原来的动态库, 重新加载动态库, 加载失败抛出异常`std::runtime_error`
-  /// @param libPath 新的动态库路径
-  void reload(const std::string &libPath)
+  /// @brief 加载动态库, 加载失败抛出异常`std::runtime_error`
+  /// @param libPath 动态库路径
+  void load(const std::string &libPath)
   {
     unload();
     load_handle(libPath);
