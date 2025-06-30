@@ -204,18 +204,14 @@ class dynamic_library
   }
 
   /**
-   * @brief 加载动态库中的符号(函数或变量), 加载失败时抛出异常
+   * @brief 加载动态库中的符号(函数或变量), 加载失败抛出异常
    *
-   * @tparam F 要获取的符号对应的类型, 可以是函数类型(如 `int(int, int)`)或变量类型(如 `int`、`const char*`)
-   * @param symbol_name 符号名称, 即动态库中导出的符号名(区分大小写)
-   * @return 返回符号地址(函数或变量的地址), 类型为 `symbol_pointer_t<F>`
-   * @throw std::runtime_error 如果加载失败, 则抛出异常, 包含符号名与平台错误信息
+   * @tparam F 要获取的符号类型, 可以是函数类型(如 int(int, int))或变量指针类型(如 int*、const char**)
+   * @param symbol_name 符号名称(区分大小写)
+   * @return 符号地址, 类型为 symbol_pointer_t<F>
+   * @throw std::runtime_error 加载失败时抛出异常, 包含符号名和错误信息
    *
-   * @note
-   * - 该函数支持加载函数或变量符号.
-   * - 如果加载失败(如符号不存在), 会抛出 `std::runtime_error` 异常.
-   * - 使用时建议通过 `get<int*>("var")` 或 `get<const char**>("str_var")` 获取变量地址.
-   * - 函数类型如 `get<int(int, int)>("add")`.
+   * @note 获取变量推荐使用 get_variable<T>()
    */
   template <typename F>
   symbol_pointer_t<F> get(const std::string &symbol_name) const
@@ -229,21 +225,50 @@ class dynamic_library
   }
 
   /**
-   * @brief 尝试加载动态库中的符号(函数或变量), 失败时返回 nullptr
+   * @brief 尝试加载动态库中的符号(函数或变量), 失败返回 nullptr
    *
-   * @tparam F 要获取的符号对应的类型, 可以是函数类型(如 `float(double)`)或变量类型(如 `point_t*`)
-   * @param symbol_name 符号名称, 即动态库中导出的符号名(区分大小写)
-   * @return 成功返回符号地址(类型为 `symbol_pointer_t<F>`), 失败返回 nullptr
+   * @tparam F 符号类型(函数或变量指针类型)
+   * @param symbol_name 符号名称(区分大小写)
+   * @return 成功返回符号地址, 失败返回 nullptr
    *
-   * @note
-   * - 不会抛出异常, 适合用于需要容错或判断符号是否存在的场景.
-   * - 使用前应检查返回值是否为 nullptr.
-   * - 支持变量和函数加载, 如 `try_get<int*>("g_val")`, 或 `try_get<void()>("say_hello")`.
+   * @note 获取变量推荐使用 try_get_variable<T>()
    */
   template <typename F>
   symbol_pointer_t<F> try_get(const std::string &symbol_name) const noexcept
   {
     return detail::load_symbol<F>(handle_, symbol_name);
+  }
+
+  /**
+   * @brief 加载动态库中的变量, 失败抛出异常
+   *
+   * @tparam T 变量类型(非函数), 如 int、double、const char*
+   * @param variable_name 变量符号名称(区分大小写)
+   * @return 返回变量的引用
+   * @throw std::runtime_error 加载失败抛出异常
+   */
+  template <typename T, typename std::enable_if<!std::is_function<T>::value, int>::type = 0>
+  T &get_variable(const std::string &variable_name) const
+  {
+    T *var_ptr = try_get<T *>(variable_name);
+    if (!var_ptr)
+    {
+      throw std::runtime_error("Failed to load variable: " + variable_name + " - " + detail::get_last_error());
+    }
+    return *var_ptr;
+  }
+
+  /**
+   * @brief 尝试加载动态库中的变量, 成功返回变量地址, 失败返回 nullptr
+   *
+   * @tparam T 变量类型(非函数)
+   * @param variable_name 变量符号名称(区分大小写)
+   * @return 返回变量指针, 加载失败返回 nullptr
+   */
+  template <typename T, typename std::enable_if<!std::is_function<T>::value, int>::type = 0>
+  T *try_get_variable(const std::string &variable_name) const noexcept
+  {
+    return try_get<T *>(variable_name);
   }
 
   /**
