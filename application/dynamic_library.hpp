@@ -37,9 +37,9 @@ namespace dll
 {
 namespace detail
 {
-/// @brief 通用符号（变量或函数）指针类型适配器
+/// @brief 通用符号(变量或函数)指针类型适配器
 ///        - 用于获取适合 dlsym/GetProcAddress 转换的原始指针类型
-///        - 支持函数类型、变量类型，自动剥离引用和一级指针，再加上一级指针
+///        - 支持函数类型、变量类型, 自动剥离引用和一级指针, 再加上一级指针
 template <typename T>
 struct symbol_pointer_traits
 {
@@ -48,7 +48,7 @@ struct symbol_pointer_traits
 };
 
 /// @brief 通用符号指针类型别名
-///        - 给定类型 T，生成适合用于动态库符号加载的指针类型
+///        - 给定类型 T, 生成适合用于动态库符号加载的指针类型
 template <typename T>
 using symbol_pointer_t = typename symbol_pointer_traits<T>::type;
 
@@ -185,11 +185,11 @@ class dynamic_library
 
     // move-and-swap方式(自赋值安全, 异常安全)
     dynamic_library tmp(std::move(rhs));  // tmp 用移动构造拿走 rhs 的资源
-    swap(*this, tmp);                     // 当前对象和 tmp 交换，tmp 拿到旧资源
-    return *this;                         // tmp 析构，释放旧资源
+    swap(*this, tmp);                     // 当前对象和 tmp 交换, tmp 拿到旧资源
+    return *this;                         // tmp 析构, 释放旧资源
   }
 
-  // swap 函数：强异常安全，供移动赋值使用
+  // swap 函数：强异常安全, 供移动赋值使用
   friend void swap(dynamic_library &lhs, dynamic_library &rhs) noexcept
   {
     using std::swap;
@@ -204,15 +204,18 @@ class dynamic_library
   }
 
   /**
-   * @brief 加载符号, 加载失败抛出异常(异常导向式API)
+   * @brief 加载动态库中的符号(函数或变量), 加载失败时抛出异常
    *
-   * @tparam F 函数指针类型, 用于指定要加载的符号对应的函数类型
-   * @param symbol_name 符号名称, 指定要加载的符号的名称
-   * @return 返回加载的符号地址
-   * @throw std::runtime_error 如果加载符号失败, 则抛出异常
+   * @tparam F 要获取的符号对应的类型, 可以是函数类型(如 `int(int, int)`)或变量类型(如 `int`、`const char*`)
+   * @param symbol_name 符号名称, 即动态库中导出的符号名(区分大小写)
+   * @return 返回符号地址(函数或变量的地址), 类型为 `symbol_pointer_t<F>`
+   * @throw std::runtime_error 如果加载失败, 则抛出异常, 包含符号名与平台错误信息
    *
-   * @note 该函数尝试加载动态库中的指定符号, 如果加载失败(如符号不存在),
-   *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
+   * @note
+   * - 该函数支持加载函数或变量符号.
+   * - 如果加载失败(如符号不存在), 会抛出 `std::runtime_error` 异常.
+   * - 使用时建议通过 `get<int*>("var")` 或 `get<const char**>("str_var")` 获取变量地址.
+   * - 函数类型如 `get<int(int, int)>("add")`.
    */
   template <typename F>
   symbol_pointer_t<F> get(const std::string &symbol_name) const
@@ -226,13 +229,16 @@ class dynamic_library
   }
 
   /**
-   * @brief 尝试加载符号, 加载失败时不抛出异常, 而是返回 nullptr
+   * @brief 尝试加载动态库中的符号(函数或变量), 失败时返回 nullptr
    *
-   * @tparam F 函数指针类型, 用于指定要加载的符号对应的函数类型
-   * @param symbol_name 符号名称, 指定要加载的符号的名称
-   * @return 返回加载的符号地址, 如果加载失败返回 nullptr
+   * @tparam F 要获取的符号对应的类型, 可以是函数类型(如 `float(double)`)或变量类型(如 `point_t*`)
+   * @param symbol_name 符号名称, 即动态库中导出的符号名(区分大小写)
+   * @return 成功返回符号地址(类型为 `symbol_pointer_t<F>`), 失败返回 nullptr
    *
-   * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
+   * @note
+   * - 不会抛出异常, 适合用于需要容错或判断符号是否存在的场景.
+   * - 使用前应检查返回值是否为 nullptr.
+   * - 支持变量和函数加载, 如 `try_get<int*>("g_val")`, 或 `try_get<void()>("say_hello")`.
    */
   template <typename F>
   symbol_pointer_t<F> try_get(const std::string &symbol_name) const noexcept
