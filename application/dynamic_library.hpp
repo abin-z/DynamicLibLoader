@@ -37,17 +37,20 @@ namespace dll
 {
 namespace detail
 {
-/// @brief 通用函数指针类型适配器
+/// @brief 通用符号（变量或函数）指针类型适配器
+///        - 用于获取适合 dlsym/GetProcAddress 转换的原始指针类型
+///        - 支持函数类型、变量类型，自动剥离引用和一级指针，再加上一级指针
 template <typename T>
-struct function_pointer_traits
+struct symbol_pointer_traits
 {
   using type =
     typename std::add_pointer<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
 };
 
-/// @brief 通用函数指针类型别名
+/// @brief 通用符号指针类型别名
+///        - 给定类型 T，生成适合用于动态库符号加载的指针类型
 template <typename T>
-using function_pointer_t = typename function_pointer_traits<T>::type;
+using symbol_pointer_t = typename symbol_pointer_traits<T>::type;
 
 // 定义平台相关的动态库 API
 #if defined(_WIN32) || defined(_WIN64)
@@ -67,10 +70,10 @@ inline void unload_library(library_handle handle) noexcept
   }
 }
 
-template <typename Func>
-inline function_pointer_t<Func> load_symbol(library_handle handle, const std::string &name) noexcept
+template <typename F>
+inline symbol_pointer_t<F> load_symbol(library_handle handle, const std::string &name) noexcept
 {
-  return reinterpret_cast<function_pointer_t<Func>>(GetProcAddress(handle, name.c_str()));
+  return reinterpret_cast<symbol_pointer_t<F>>(GetProcAddress(handle, name.c_str()));
 }
 
 inline std::string get_last_error()
@@ -113,11 +116,11 @@ inline void unload_library(library_handle handle) noexcept
   }
 }
 
-template <typename Func>
-inline function_pointer_t<Func> load_symbol(library_handle handle, const std::string &name) noexcept
+template <typename F>
+inline symbol_pointer_t<F> load_symbol(library_handle handle, const std::string &name) noexcept
 {
   dlerror();  // 清除之前的错误
-  return reinterpret_cast<function_pointer_t<Func>>(dlsym(handle, name.c_str()));
+  return reinterpret_cast<symbol_pointer_t<F>>(dlsym(handle, name.c_str()));
 }
 
 inline std::string get_last_error()
@@ -135,7 +138,7 @@ using detail::library_handle;
 class dynamic_library
 {
   template <typename T>
-  using function_pointer_t = typename detail::function_pointer_t<T>;
+  using symbol_pointer_t = typename detail::symbol_pointer_t<T>;
 
  public:
   /**
@@ -203,7 +206,7 @@ class dynamic_library
   /**
    * @brief 加载符号, 加载失败抛出异常(异常导向式API)
    *
-   * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
+   * @tparam F 函数指针类型, 用于指定要加载的符号对应的函数类型
    * @param symbol_name 符号名称, 指定要加载的符号的名称
    * @return 返回加载的符号地址
    * @throw std::runtime_error 如果加载符号失败, 则抛出异常
@@ -211,10 +214,10 @@ class dynamic_library
    * @note 该函数尝试加载动态库中的指定符号, 如果加载失败(如符号不存在),
    *       会抛出 `std::runtime_error` 异常, 异常信息中包含符号名称及加载错误信息.
    */
-  template <typename Func>
-  function_pointer_t<Func> get(const std::string &symbol_name) const
+  template <typename F>
+  symbol_pointer_t<F> get(const std::string &symbol_name) const
   {
-    auto symbol = detail::load_symbol<Func>(handle_, symbol_name);
+    auto symbol = detail::load_symbol<F>(handle_, symbol_name);
     if (!symbol)
     {
       throw std::runtime_error("Failed to load symbol: " + symbol_name + " - " + detail::get_last_error());
@@ -225,22 +228,22 @@ class dynamic_library
   /**
    * @brief 尝试加载符号, 加载失败时不抛出异常, 而是返回 nullptr
    *
-   * @tparam Func 函数指针类型, 用于指定要加载的符号对应的函数类型
+   * @tparam F 函数指针类型, 用于指定要加载的符号对应的函数类型
    * @param symbol_name 符号名称, 指定要加载的符号的名称
    * @return 返回加载的符号地址, 如果加载失败返回 nullptr
    *
    * @note 该函数不会抛出异常.如果符号加载失败, 返回值为 `nullptr`, 使用此函数时需检查返回值来确认加载是否成功.
    */
-  template <typename Func>
-  function_pointer_t<Func> try_get(const std::string &symbol_name) const noexcept
+  template <typename F>
+  symbol_pointer_t<F> try_get(const std::string &symbol_name) const noexcept
   {
-    return detail::load_symbol<Func>(handle_, symbol_name);
+    return detail::load_symbol<F>(handle_, symbol_name);
   }
 
   /**
    * @brief 调用动态库中的符号, 支持参数转发(调用后会缓存函数)
    *
-   * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
+   * @tparam F 函数指针类型, 用于指定要调用的符号对应的函数类型
    * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
    * @param symbol_name 符号名称, 指定要调用的符号的名称
    * @param args 可变参数, 传递给函数的参数
@@ -250,11 +253,11 @@ class dynamic_library
    * @note 该函数会尝试加载并调用动态库中的指定符号.如果符号不存在或加载失败,
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
-  template <typename Func, typename... Args>
+  template <typename F, typename... Args>
   auto invoke(const std::string &symbol_name, Args... args) const
-    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+    -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
-    using func_ptr = function_pointer_t<Func>;
+    using func_ptr = symbol_pointer_t<F>;
     func_ptr symbol = nullptr;
     {
       std::lock_guard<std::mutex> lock(mtx_);
@@ -266,7 +269,7 @@ class dynamic_library
     }
     if (!symbol)  // 未找到符号
     {
-      symbol = get<Func>(symbol_name);  // 加载符号, 加载失败抛异常
+      symbol = get<F>(symbol_name);  // 加载符号, 加载失败抛异常
       {
         std::lock_guard<std::mutex> lock(mtx_);
         cache_.emplace(symbol_name, reinterpret_cast<void *>(symbol));  // 添加缓存
@@ -278,7 +281,7 @@ class dynamic_library
   /**
    * @brief 调用动态库中的符号, 支持参数转发(不使用缓存)
    *
-   * @tparam Func 函数指针类型, 用于指定要调用的符号对应的函数类型
+   * @tparam F 函数指针类型, 用于指定要调用的符号对应的函数类型
    * @tparam Args 可变参数模板, 用于指定传递给函数的参数类型
    * @param symbol_name 符号名称, 指定要调用的符号的名称
    * @param args 可变参数, 传递给函数的参数
@@ -288,11 +291,11 @@ class dynamic_library
    * @note 该函数会尝试加载并调用动态库中的指定符号.如果符号不存在或加载失败,
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
-  template <typename Func, typename... Args>
+  template <typename F, typename... Args>
   auto invoke_uncached(const std::string &symbol_name, Args... args) const
-    -> decltype(std::declval<Func>()(std::forward<Args>(args)...))
+    -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
-    return get<Func>(symbol_name)(std::forward<Args>(args)...);  // 直接调用函数
+    return get<F>(symbol_name)(std::forward<Args>(args)...);  // 直接调用函数
   }
 
   /// @brief 检查动态库是否已加载
