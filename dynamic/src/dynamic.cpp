@@ -3,6 +3,16 @@
 #include <dynamic/common.hpp>
 #include <string>
 
+// 全局变量定义
+DLL_PUBLIC_API int g_counter = 42;
+DLL_PUBLIC_API int* g_counter_ptr = &g_counter;
+
+// 结构体变量
+DLL_PUBLIC_API point_t g_point = {1.0, 2.0, 3.0};
+// 结构体指针
+DLL_PUBLIC_API point_t* g_point_ptr = &g_point;
+
+// 函数实现
 DLL_PUBLIC_API void sayHello()
 {
   Common::println("hello, I am from dynamicLib.");

@@ -20,6 +20,16 @@ struct point_t
   double z;
 };
 
+// 导出全局变量
+DLL_PUBLIC_API extern int g_counter;
+DLL_PUBLIC_API extern int* g_counter_ptr;
+
+// 结构体变量
+DLL_PUBLIC_API extern point_t g_point;
+// 结构体指针
+DLL_PUBLIC_API extern point_t* g_point_ptr;
+
+// 导出函数
 DLL_PUBLIC_API void sayHello();
 
 DLL_PUBLIC_API int intAdd(int a, int b);
