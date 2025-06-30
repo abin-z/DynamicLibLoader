@@ -20,6 +20,9 @@ struct point_t
   double z;
 };
 
+// 版本号字符串，导出为只读全局变量
+DLL_PUBLIC_API extern const char* g_version;
+
 // 导出全局变量
 DLL_PUBLIC_API extern int g_counter;
 DLL_PUBLIC_API extern int* g_counter_ptr;

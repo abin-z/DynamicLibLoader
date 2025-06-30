@@ -3,12 +3,15 @@
 #include <dynamic/common.hpp>
 #include <string>
 
+// 版本号字符串，导出为只读全局变量
+DLL_PUBLIC_API const char* g_version = "v1.2.3";
+
 // 全局变量定义
 DLL_PUBLIC_API int g_counter = 42;
 DLL_PUBLIC_API int* g_counter_ptr = &g_counter;
 
 // 结构体变量
-DLL_PUBLIC_API point_t g_point = {1.0, 2.0, 3.0};
+DLL_PUBLIC_API point_t g_point = {9, 99, 999};
 // 结构体指针
 DLL_PUBLIC_API point_t* g_point_ptr = &g_point;
 
