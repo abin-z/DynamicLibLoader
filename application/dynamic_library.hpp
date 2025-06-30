@@ -237,12 +237,13 @@ class dynamic_library
   {
     if (!handle_)
     {
-      throw std::runtime_error("Dynamic library not loaded");
+      throw std::runtime_error("[dynamic_library] error: Dynamic library not loaded");
     }
     auto symbol = detail::load_symbol<F>(handle_, symbol_name);
     if (!symbol)
     {
-      throw std::runtime_error("Failed to load symbol: " + symbol_name + " - " + detail::get_last_error());
+      throw std::runtime_error("[dynamic_library] error: Failed to load symbol: '" + symbol_name + "' " +
+                               detail::get_last_error());
     }
     return symbol;
   }
@@ -277,7 +278,8 @@ class dynamic_library
     T *var_ptr = try_get<T *>(variable_name);
     if (!var_ptr)
     {
-      throw std::runtime_error("Failed to load variable: " + variable_name + " - " + detail::get_last_error());
+      throw std::runtime_error("[dynamic_library] error: Failed to load variable: '" + variable_name + "' " +
+                               detail::get_last_error());
     }
     return *var_ptr;
   }
@@ -309,8 +311,8 @@ class dynamic_library
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
   template <typename F, typename... Args>
-  auto invoke(const std::string &symbol_name, Args... args) const
-    -> decltype(std::declval<F>()(std::forward<Args>(args)...))
+  auto invoke(const std::string &symbol_name,
+              Args... args) const -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
     using func_ptr = symbol_pointer_t<F>;
     func_ptr symbol = nullptr;
@@ -347,8 +349,8 @@ class dynamic_library
    *       会抛出 `std::runtime_error` 异常.使用此函数时需确保符号名称正确.
    */
   template <typename F, typename... Args>
-  auto invoke_uncached(const std::string &symbol_name, Args... args) const
-    -> decltype(std::declval<F>()(std::forward<Args>(args)...))
+  auto invoke_uncached(const std::string &symbol_name,
+                       Args... args) const -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
     return get<F>(symbol_name)(std::forward<Args>(args)...);  // 直接调用函数
   }
@@ -393,7 +395,8 @@ class dynamic_library
     handle_ = detail::load_library(libPath);
     if (!handle_)
     {
-      throw std::runtime_error("Failed to load library: " + libPath + " - " + detail::get_last_error());
+      throw std::runtime_error("[dynamic_library] error: Failed to load library: '" + libPath + "' " +
+                               detail::get_last_error());
     }
   }
 
