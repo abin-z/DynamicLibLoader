@@ -203,6 +203,23 @@ class dynamic_library
     return valid();
   }
 
+  /// @brief 检查动态库中是否存在指定符号, 如果符号存在 返回 true 否则返回 false
+  bool has_symbol(const std::string &name) const noexcept
+  {
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      if (cache_.find(name) != cache_.end()) return true;  // 先查缓存
+    }
+    void *sym = try_get<void>(name);
+    if (sym)
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      cache_[name] = sym;  // 添加缓存
+      return true;
+    }
+    return false;
+  }
+
   /**
    * @brief 加载动态库中的符号(函数或变量), 加载失败抛出异常
    *
@@ -242,7 +259,7 @@ class dynamic_library
   /**
    * @brief 加载动态库中的变量, 失败抛出异常
    *
-   * @tparam T 变量类型(非函数), 如 int、double、const char*
+   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等（非函数类型）
    * @param variable_name 变量符号名称(区分大小写)
    * @return 返回变量的引用
    * @throw std::runtime_error 加载失败抛出异常
@@ -261,7 +278,7 @@ class dynamic_library
   /**
    * @brief 尝试加载动态库中的变量, 成功返回变量地址, 失败返回 nullptr
    *
-   * @tparam T 变量类型(非函数)
+   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等（非函数类型）
    * @param variable_name 变量符号名称(区分大小写)
    * @return 返回变量指针, 加载失败返回 nullptr
    */
