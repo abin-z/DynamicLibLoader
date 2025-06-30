@@ -124,6 +124,7 @@ void testNullLibrary()
 {
   std::cout << "--------- testNullLibrary ----------" << std::endl;
   dll::dynamic_library lib;  // 默认构造函数创建一个空的动态库对象
+  lib.unload();              // 显式释放资源, 但此时 handle_ 仍然是 nullptr
   if (!lib)
   {
     std::cout << "lib is not valid." << std::endl;
