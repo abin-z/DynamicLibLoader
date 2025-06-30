@@ -29,6 +29,7 @@ void testHasSymbol(const dll::dynamic_library &lib);
 void testGetVariable(const dll::dynamic_library &lib);
 void testGetVariable2(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
+void testNullLibrary();
 int main()
 {
   std::cout << "====================================================" << std::endl;
@@ -108,7 +109,8 @@ void func()
     testHasSymbol(lib);
     testGetVariable(lib);
     testGetVariable2(lib);
-
+    
+    testNullLibrary();
     testNotExistSymbol(lib);
   }
   catch (const std::exception &ex)
@@ -116,6 +118,29 @@ void func()
     std::cerr << "Error: " << ex.what() << std::endl;
     return;
   }
+}
+
+void testNullLibrary()
+{
+  std::cout << "--------- testNullLibrary ----------" << std::endl;
+  dll::dynamic_library lib;  // 默认构造函数创建一个空的动态库对象
+  if (!lib)
+  {
+    std::cout << "lib is not valid." << std::endl;
+  }
+  else
+  {
+    std::cout << "lib is valid." << std::endl;
+  }
+  try
+  {
+    lib.get<intAdd_func>("intAdd");  // 尝试获取一个函数符号, 会抛出异常
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  std::cout << "--------- testNullLibrary ----------" << std::endl;
 }
 
 void testHasSymbol(const dll::dynamic_library &lib)
@@ -155,12 +180,13 @@ void testGetVariable(const dll::dynamic_library &lib)
 
   // 获取动态库结构体变量
   point_t point = lib.get_variable<point_t>("g_point");
-  std::cout << "[get_variable] g_point value x = " << point.x << ", y = " << point.y << ", z = " << point.z << std::endl;
+  std::cout << "[get_variable] g_point value x = " << point.x << ", y = " << point.y << ", z = " << point.z
+            << std::endl;
 
   // 获取动态库结构体指针变量
   point_t *point_ptr = lib.get_variable<point_t *>("g_point_ptr");
-  std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y << ", z = " << point_ptr->z
-            << std::endl;
+  std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y
+            << ", z = " << point_ptr->z << std::endl;
 
   std::cout << "--------- testGetVariable ----------" << std::endl;
 }
