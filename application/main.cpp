@@ -25,6 +25,7 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
+void testGetVariable(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
 int main()
 {
@@ -102,6 +103,8 @@ void func()
     printPoint(p);
     std::cout << std::endl;
 
+    testGetVariable(lib);
+
     testNotExistSymbol(lib);
   }
   catch (const std::exception &ex)
@@ -109,6 +112,33 @@ void func()
     std::cerr << "Error: " << ex.what() << std::endl;
     return;
   }
+}
+
+/// @brief 测试获取动态库中的变量
+void testGetVariable(const dll::dynamic_library &lib)
+{
+  std::cout << "--------- testGetVariable ----------" << std::endl;
+
+  int *counter = lib.get<int *>("g_counter");
+  std::cout << "g_counter addr = " << static_cast<void *>(counter) << ", value = " << (counter ? *counter : -1)
+            << std::endl;
+
+  int **counter_ptr = lib.get<int **>("g_counter_ptr");
+  std::cout << "g_counter_ptr addr = " << static_cast<void *>(counter_ptr)
+            << ", value = " << (counter_ptr && *counter_ptr ? **counter_ptr : -1) << std::endl;
+
+  point_t *point = lib.get<point_t *>("g_point");
+  std::cout << "g_point addr = " << static_cast<void *>(point);
+  if (point) std::cout << ", value = (" << point->x << ", " << point->y << ", " << point->z << ")";
+  std::cout << std::endl;
+
+  point_t **point_ptr = lib.get<point_t **>("g_point_ptr");
+  std::cout << "g_point_ptr addr = " << static_cast<void *>(point_ptr);
+  if (point_ptr && *point_ptr)
+    std::cout << ", value = (" << (*point_ptr)->x << ", " << (*point_ptr)->y << ", " << (*point_ptr)->z << ")";
+  std::cout << std::endl;
+
+  std::cout << "--------- testGetVariable ----------" << std::endl;
 }
 
 /// @brief 测试符号信息不存在的情况
