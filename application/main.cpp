@@ -179,15 +179,34 @@ void testGetVariable(const dll::dynamic_library &lib)
   int *counter_ptr = lib.get_variable<int *>("g_counter_ptr");
   std::cout << "[get_variable] g_counter_ptr value = " << *counter_ptr << std::endl;
 
+  // 直接修改动态库中变量的值
+  *counter_ptr = 101;
+
   // 获取动态库结构体变量
-  point_t point = lib.get_variable<point_t>("g_point");
+  point_t &point = lib.get_variable<point_t>("g_point");
   std::cout << "[get_variable] g_point value x = " << point.x << ", y = " << point.y << ", z = " << point.z
             << std::endl;
+  // 直接修改动态库中变量的值, point是引用
+  point.x = 8;
 
   // 获取动态库结构体指针变量
   point_t *point_ptr = lib.get_variable<point_t *>("g_point_ptr");
   std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y
             << ", z = " << point_ptr->z << std::endl;
+
+  //////////////////////// try_get_variable
+  // 获取动态库版本号
+  const char **version2 = lib.try_get_variable<const char *>("g_version");
+  std::cout << "[try_get_variable] Dynamic Library Version: " << *version2 << std::endl;
+
+  // 获取动态库变量
+  int *counter2 = lib.try_get_variable<int>("g_counter");
+  std::cout << "[try_get_variable] g_counter value = " << *counter2 << std::endl;
+
+  // 获取动态库结构体变量
+  point_t *point2 = lib.try_get_variable<point_t>("g_point");
+  std::cout << "[try_get_variable] g_point value x = " << point2->x << ", y = " << point2->y << ", z = " << point2->z
+            << std::endl;
 
   std::cout << "--------- testGetVariable ----------" << std::endl;
 }
