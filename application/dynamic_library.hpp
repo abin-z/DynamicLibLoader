@@ -249,7 +249,7 @@ class dynamic_library
   }
 
   /**
-   * @brief 尝试加载动态库中的符号(函数或变量), 失败返回 nullptr
+   * @brief 尝试加载动态库中的符号(函数或变量), 失败返回 nullptr(不会抛出异常)
    *
    * @tparam F 符号类型(函数或变量指针类型)
    * @param symbol_name 符号名称(区分大小写)
@@ -285,7 +285,7 @@ class dynamic_library
   }
 
   /**
-   * @brief 尝试加载动态库中的变量, 成功返回变量地址, 失败返回 nullptr
+   * @brief 尝试加载动态库中的变量, 成功返回变量地址, 失败返回 nullptr(不会抛出异常)
    *
    * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等（非函数类型）
    * @param variable_name 变量符号名称(区分大小写)
