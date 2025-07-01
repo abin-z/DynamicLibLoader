@@ -95,6 +95,26 @@ int main()
 }
 ```
 
+4. **使用`get_variable()`获取变量**
+
+```cpp
+int main()
+{
+  try
+  {
+    dll::dynamic_library lib("path/to/your/library.so");
+    const char *version = lib.get_variable<const char *>("g_version"); // 获取动态库版本号字符串
+    std::cout << "Dynamic Library Version: " << version << std::endl;
+    int counter = lib.get_variable<int>("g_counter");	// 获取动态库中g_counter变量
+    std::cout << "g_counter value = " << counter << std::endl;
+  }
+  catch (const std::runtime_error &e)
+  {
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
+}
+```
+
 ### 警告: 可能的未定义行为
 
 在获取函数符号时，**一定要确保你传入的函数类型和库中的函数签名完全一致.**
@@ -188,7 +208,10 @@ using printPoint_func = void (*)(point_t);
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
+void testHasSymbol(const dll::dynamic_library &lib);
+void testGetVariable(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
+void testNullLibrary();
 int main()
 {
   std::cout << "====================================================" << std::endl;
@@ -210,14 +233,13 @@ void func()
 #endif
 
     // 加载动态库
-    using dll::dynamic_library;
-    dynamic_library lib0(libPath);
-    dynamic_library lib1(libPath);
-    // dynamic_library lib = lib0; 错误: 禁止拷贝构造
-    // lib0 = lib1;               错误: 禁止拷贝赋值
+    dll::dynamic_library lib0(libPath);
+    dll::dynamic_library lib1(libPath);
+    // dll::dynamic_library lib = lib0;  错误: 禁止拷贝构造
+    // lib0 = lib1;                      错误: 禁止拷贝赋值
 
-    lib0 = std::move(lib1);               // 支持移动赋值
-    dynamic_library lib(std::move(lib0));  // 支持移动构造
+    lib0 = std::move(lib1);                     // 支持移动赋值
+    dll::dynamic_library lib(std::move(lib0));  // 支持移动构造
 
     if (lib)
     {
@@ -237,11 +259,11 @@ void func()
     double ret2 = lib.invoke<double(double, double)>("doubleAdd", 1.8, 2.5);
     ret = lib.invoke<int(int, int)>("intAdd", 2, 3);
     ret = lib.invoke<int(int, int)>("intAdd", 3, 4);
-    ret = lib.invoke<int(*)(int, int)>("intAdd", 4, 5);
-    ret = lib.invoke<int(*)(int, int)>("intAdd", 5, 6);
-    ret = lib.invoke<int(&)(int, int)>("intAdd", 6, 7);
-    ret = lib.invoke<int(&)(int, int)>("intAdd", 7, 8);
-    ret = lib.invoke<int(&&)(int, int)>("intAdd", 8, 9);
+    ret = lib.invoke<int (*)(int, int)>("intAdd", 4, 5);
+    ret = lib.invoke<int (*)(int, int)>("intAdd", 5, 6);
+    ret = lib.invoke<int (&)(int, int)>("intAdd", 6, 7);
+    ret = lib.invoke<int (&)(int, int)>("intAdd", 7, 8);
+    ret = lib.invoke<int (&&)(int, int)>("intAdd", 8, 9);
     double ret3 = lib.invoke_uncached<double(double, double)>("doubleAdd", 1.8, 2.5);
     std::cout << "invoke: intAdd(8, 9) = " << ret << std::endl;
     std::cout << "invoke: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
@@ -266,6 +288,10 @@ void func()
     printPoint(p);
     std::cout << std::endl;
 
+    testHasSymbol(lib);
+    testGetVariable(lib);
+    
+    testNullLibrary();
     testNotExistSymbol(lib);
   }
   catch (const std::exception &ex)
@@ -273,6 +299,88 @@ void func()
     std::cerr << "Error: " << ex.what() << std::endl;
     return;
   }
+}
+
+void testNullLibrary()
+{
+  std::cout << "--------- testNullLibrary ----------" << std::endl;
+  dll::dynamic_library lib;  // 默认构造函数创建一个空的动态库对象
+  lib.unload();              // 显式释放资源, 但此时 handle_ 仍然是 nullptr
+  if (!lib)
+  {
+    std::cout << "lib is not valid." << std::endl;
+  }
+  else
+  {
+    std::cout << "lib is valid." << std::endl;
+  }
+  try
+  {
+    lib.get<intAdd_func>("intAdd");  // 尝试获取一个函数符号, 会抛出异常
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  std::cout << "--------- testNullLibrary ----------" << std::endl;
+}
+
+void testHasSymbol(const dll::dynamic_library &lib)
+{
+  std::cout << "------ testHasSymbol ------" << std::endl;
+  std::cout << "has_symbol(\"intAdd\"): " << lib.has_symbol("intAdd") << std::endl;
+  std::cout << "has_symbol(\"g_version\"): " << lib.has_symbol("g_version") << std::endl;
+  std::cout << "has_symbol(\"non_exist\"): " << lib.has_symbol("non_exist") << std::endl;
+  std::cout << "------ testHasSymbol ------" << std::endl;
+}
+
+/// @brief 测试获取动态库中的变量
+void testGetVariable(const dll::dynamic_library &lib)
+{
+  std::cout << "--------- testGetVariable ----------" << std::endl;
+
+  // 获取动态库版本号
+  const char *version = lib.get_variable<const char *>("g_version");
+  std::cout << "[get_variable] Dynamic Library Version: " << version << std::endl;
+
+  // 获取动态库变量
+  int counter = lib.get_variable<int>("g_counter");
+  std::cout << "[get_variable] g_counter value = " << counter << std::endl;
+
+  // 获取动态库指针变量
+  int *counter_ptr = lib.get_variable<int *>("g_counter_ptr");
+  std::cout << "[get_variable] g_counter_ptr value = " << *counter_ptr << std::endl;
+
+  // 直接修改动态库中变量的值
+  *counter_ptr = 101;
+
+  // 获取动态库结构体变量
+  point_t &point = lib.get_variable<point_t>("g_point");
+  std::cout << "[get_variable] g_point value x = " << point.x << ", y = " << point.y << ", z = " << point.z
+            << std::endl;
+  // 直接修改动态库中变量的值, point是引用
+  point.x = 8;
+
+  // 获取动态库结构体指针变量
+  point_t *point_ptr = lib.get_variable<point_t *>("g_point_ptr");
+  std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y
+            << ", z = " << point_ptr->z << std::endl;
+
+  //////////////////////// try_get_variable
+  // 获取动态库版本号
+  const char **version2 = lib.try_get_variable<const char *>("g_version");
+  std::cout << "[try_get_variable] Dynamic Library Version: " << *version2 << std::endl;
+
+  // 获取动态库变量
+  int *counter2 = lib.try_get_variable<int>("g_counter");
+  std::cout << "[try_get_variable] g_counter value = " << *counter2 << std::endl;
+
+  // 获取动态库结构体变量
+  point_t *point2 = lib.try_get_variable<point_t>("g_point");
+  std::cout << "[try_get_variable] g_point value x = " << point2->x << ", y = " << point2->y << ", z = " << point2->z
+            << std::endl;
+
+  std::cout << "--------- testGetVariable ----------" << std::endl;
 }
 
 /// @brief 测试符号信息不存在的情况
@@ -296,11 +404,14 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
 
   try
   {
-    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  // 正常调用: symbol是对的, 函数签名也正常
+    // 正常调用: symbol是对的, 函数签名也正常
+    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  
     std::cout << "lib.invoke ret = " << ret << std::endl;
-    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  // 未定义行为: symbol是对的,但是函数签名不一致
+    // 未定义行为: symbol是对的,但是函数签名不一致
+    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  
     std::cout << "[UB] lib.invoke ret2 = " << ret2 << std::endl;
-    double ret3 = lib.invoke<double()>("doubleAdd");  // 未定义行为: symbol是对的,但是函数签名不一致
+    // 未定义行为: symbol是对的,但是函数签名不一致
+    double ret3 = lib.invoke<double()>("doubleAdd");  
     std::cout << "[UB] lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
