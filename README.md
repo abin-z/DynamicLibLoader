@@ -105,7 +105,7 @@ int main()
     dll::dynamic_library lib("path/to/your/library.so");
     const char *version = lib.get_variable<const char *>("g_version"); // 获取动态库版本号字符串
     std::cout << "Dynamic Library Version: " << version << std::endl;
-    int counter = lib.get_variable<int>("g_counter");	// 获取动态库中g_counter变量
+    int &counter = lib.get_variable<int>("g_counter");	// 获取动态库中g_counter变量
     std::cout << "g_counter value = " << counter << std::endl;
   }
   catch (const std::runtime_error &e)
