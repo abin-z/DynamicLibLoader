@@ -82,6 +82,7 @@ void func()
     ret = lib.invoke<int (&)(int, int)>("intAdd", 6, 7);
     ret = lib.invoke<int (&)(int, int)>("intAdd", 7, 8);
     ret = lib.invoke<int (&&)(int, int)>("intAdd", 8, 9);
+    // ret = lib.invoke<int>("g_counter"); // ❌你想获取变量, 这个模板不允许, 请使用 get_variable
     double ret3 = lib.invoke_uncached<double(double, double)>("doubleAdd", 1.8, 2.5);
     std::cout << "invoke: intAdd(8, 9) = " << ret << std::endl;
     std::cout << "invoke: doubleAdd(1.8, 2.5) = " << ret2 << std::endl;
@@ -193,6 +194,9 @@ void testGetVariable(const dll::dynamic_library &lib)
   point_t *point_ptr = lib.get_variable<point_t *>("g_point_ptr");
   std::cout << "[get_variable] g_point_ptr value x = " << point_ptr->x << ", y = " << point_ptr->y
             << ", z = " << point_ptr->z << std::endl;
+
+  // // 错误用法：传函数类型
+  // auto& f = lib.get_variable<void()>("my_function"); // ❌你想获取函数, 这个模板不允许, 请使用 get
 
   //////////////////////// try_get_variable
   // 获取动态库版本号
