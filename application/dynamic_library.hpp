@@ -317,9 +317,6 @@ class dynamic_library
   auto invoke(const std::string &symbol_name, Args... args) const
     -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
-    // 使用 remove_ptr_ref_t 去除引用和一级指针,再使用 std::is_function 检查是否为函数类型
-    static_assert(std::is_function<detail::remove_ptr_ref_t<F>>::value,
-                  "[dynamic_library] error: invoke() requires F to be a function type (i.e., function pointer)");
     using func_ptr = symbol_pointer_t<F>;
     func_ptr symbol = nullptr;
     {
@@ -358,9 +355,6 @@ class dynamic_library
   auto invoke_uncached(const std::string &symbol_name, Args... args) const
     -> decltype(std::declval<F>()(std::forward<Args>(args)...))
   {
-    // 使用 remove_ptr_ref_t 去除引用和一级指针,再使用 std::is_function 检查是否为函数类型
-    static_assert(std::is_function<detail::remove_ptr_ref_t<F>>::value,
-                  "[dynamic_library] error: invoke() requires F to be a function type (i.e., function pointer)");
     return get<F>(symbol_name)(std::forward<Args>(args)...);  // 直接调用函数
   }
 
