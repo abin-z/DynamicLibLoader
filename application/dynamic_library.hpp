@@ -270,12 +270,12 @@ class dynamic_library
   /**
    * @brief 加载动态库中的变量, 失败抛出异常
    *
-   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等（非函数类型）
+   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等(非函数类型)
    * @param variable_name 变量符号名称(区分大小写)
    * @return 返回变量的引用
    * @throw std::runtime_error 加载失败抛出异常
    */
-  template <typename T, typename std::enable_if<!std::is_function<T>::value, int>::type = 0>
+  template <typename T, typename std::enable_if<!std::is_function<detail::remove_ptr_ref_t<T>>::value, int>::type = 0>
   T &get_variable(const std::string &variable_name) const
   {
     T *var_ptr = try_get<T *>(variable_name);
@@ -290,11 +290,11 @@ class dynamic_library
   /**
    * @brief 尝试加载动态库中的变量, 成功返回变量地址, 失败返回 nullptr(不会抛出异常)
    *
-   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等（非函数类型）
+   * @tparam T 变量的基础类型，如 int、double、const char*、MyStruct 等(非函数类型)
    * @param variable_name 变量符号名称(区分大小写)
    * @return 返回变量指针, 加载失败返回 nullptr
    */
-  template <typename T, typename std::enable_if<!std::is_function<T>::value, int>::type = 0>
+  template <typename T, typename std::enable_if<!std::is_function<detail::remove_ptr_ref_t<T>>::value, int>::type = 0>
   T *try_get_variable(const std::string &variable_name) const noexcept
   {
     return try_get<T *>(variable_name);
