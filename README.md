@@ -1,12 +1,14 @@
 # DynamicLibLoader 跨平台动态库加载器
 
-**DynamicLibLoader** 是一个跨平台的动态库加载器，提供了一个统一的 API 来显式加载动态库并调用其中的符号（函数或变量）。支持 Windows 和 POSIX 系统（如 Linux、macOS），自动处理平台差异。
+**DynamicLibLoader** 是一个跨平台的动态库加载器，提供了一个统一的 API 来显式加载动态库并调用其中的符号（函数或变量）。支持 Windows 和 POSIX 系统(如 Linux、macOS)，自动处理平台差异。
 
 ### 核心特性概览:
 
 - ✅ **跨平台支持**: 兼容 Windows 和 POSIX (Linux/macOS).
 
 - ✅ **RAII 资源管理**: 动态库在构造时加载，在析构时卸载，避免资源泄露.
+
+- ✅**可加载函数和变量**: 通过`get()`获取函数指针, 通过`get_variable()`获取变量引用.
 
 - ✅ **错误处理**:  在加载库或符号失败时，抛出详细的 `std::runtime_error` 异常，并附带平台特定的错误消息.
 
