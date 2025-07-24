@@ -104,15 +104,15 @@ static point_callback_t g_point_cb = nullptr;
 static box_callback_t g_box_cb = nullptr;
 
 // 1. 注册回调函数
-void register_double_callback(double_callback_t cb)
+DLL_PUBLIC_API void register_double_callback(double_callback_t cb)
 {
   g_double_cb = cb;
 }
-void register_point_callback(point_callback_t cb)
+DLL_PUBLIC_API void register_point_callback(point_callback_t cb)
 {
   g_point_cb = cb;
 }
-void register_box_callback(box_callback_t cb)
+DLL_PUBLIC_API void register_box_callback(box_callback_t cb)
 {
   g_box_cb = cb;
 }
