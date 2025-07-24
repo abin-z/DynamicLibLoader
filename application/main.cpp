@@ -28,7 +28,6 @@ struct box_t
   point_t max;    // 最大点
 };
 
-
 using getPoint_func = point_t (*)();
 using printPoint_func = void (*)(point_t);
 
@@ -43,6 +42,7 @@ void testHasSymbol(const dll::dynamic_library &lib);
 void testGetVariable(const dll::dynamic_library &lib);
 void testGetVariable2(const dll::dynamic_library &lib);
 void testNotExistSymbol(const dll::dynamic_library &lib);
+void testCallback(const dll::dynamic_library &lib);
 void testNullLibrary();
 int main()
 {
@@ -308,4 +308,35 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
   }
 
   std::cout << "---------testNotExistSymbol----------" << std::endl;
+}
+
+
+typedef void (*double_callback_t)(double x, double y, double z);  // 简单函数回调
+typedef void (*point_callback_t)(point_t p);                      // 按值传递 point_t
+typedef void (*box_callback_t)(box_t *p);                         // 指针传递 box_t
+
+void my_double_callback(double x, double y, double z)
+{
+  std::cout << "my_double_callback: " << x << ", " << y << ", " << z << std::endl;
+}
+
+void my_point_callback(point_t p)
+{
+  std::cout << "my_point_callback: (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+}
+
+void my_box_callback(box_t *p)
+{
+  if (p)
+  {
+    std::cout << "my_box_callback: (" << p->min.x << ", " << p->min.y << ", " << p->min.z << ") - (" << p->max.x << ", "
+              << p->max.y << ", " << p->max.z << ")" << std::endl;
+  }
+}
+
+void testCallback(const dll::dynamic_library &lib)
+{
+  std::cout << "---------testCallback----------" << std::endl;
+  
+  std::cout << "---------testCallback----------" << std::endl;
 }
