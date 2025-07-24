@@ -116,7 +116,13 @@ void register_box_callback(box_callback_t cb)
 {
   g_box_cb = cb;
 }
+
 // 2. 调用注册的回调函数
+// 根据参数 n 的位标志按位判断，触发对应类型的回调函数（如果已注册）
+// n 的每一位表示是否触发某个类型的回调：
+//   bit 0（值为 1）：触发 double 回调（g_double_cb）
+//   bit 1（值为 2）：触发 point 回调（g_point_cb）
+//   bit 2（值为 4）：触发 box 回调（g_box_cb）
 DLL_PUBLIC_API void trigger_callbacks(int n)
 {
   if ((n & 1) && g_double_cb)

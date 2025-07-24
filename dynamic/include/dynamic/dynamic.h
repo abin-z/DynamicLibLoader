@@ -69,8 +69,8 @@ DLL_PUBLIC_API void point2String(point_t *arg, char *buf, unsigned int max_size)
 void register_double_callback(double_callback_t cb);  // 函数 1
 void register_point_callback(point_callback_t cb);    // 函数 2
 void register_box_callback(box_callback_t cb);        // 函数 4
+
 // 2. 调用注册的回调函数
-// 
 // n = 1 表示调用 double_callback
 // n = 2 表示调用 point_callback
 // n = 4 表示调用 box_callback
