@@ -316,6 +316,7 @@ typedef void (*double_callback_t)(double x, double y, double z);  // 简单函�
 typedef void (*point_callback_t)(point_t p);                      // 按值传递 point_t
 typedef void (*box_callback_t)(box_t *p);                         // 指针传递 box_t
 
+/// 自定义的回调函数
 void my_double_callback(double x, double y, double z)
 {
   std::cout << "[my_double_callback]: " << x * x << ", " << y * y << ", " << z * z << std::endl;
@@ -341,6 +342,7 @@ void testCallback(const dll::dynamic_library &lib)
   auto fn_hellostr = lib.get<const char *()>("getHelloString");
   auto fn_getbox = lib.get<box_t()>("getBox");
   box_t box = fn_getbox();
+  // 函数签名一定要正确
   auto fn_box2String = lib.get<void(box_t, char *, unsigned int)>("box2String");
   auto fn_point2String = lib.get<void(point_t *, char *, unsigned int)>("point2String");
 
