@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "dynamic_library.hpp"
 
@@ -8,10 +9,10 @@
  */
 
 /// =========== 定义动态库中函数指针类型 start ===========
-using sayHello_func  = void (*)();                // 函数指针类型
-using intAdd_func    = int (&)(int, int);         // 引用函数指针类型
-using floatAdd_func  = float (&&)(float, float);  // 右值引用函数指针类型
-using doubleAdd_func = double(double, double);    // 函数类型
+using sayHello_func = void (*)();                // 函数指针类型
+using intAdd_func = int (&)(int, int);           // 引用函数指针类型
+using floatAdd_func = float (&&)(float, float);  // 右值引用函数指针类型
+using doubleAdd_func = double(double, double);   // 函数类型
 // 动态库中的struct
 struct point_t
 {
@@ -79,11 +80,11 @@ void func()
     }
 
     // 加载函数符号
-    auto sayHello   = lib.get<sayHello_func>("sayHello");
-    auto intAdd     = lib.get<intAdd_func>("intAdd");
-    auto floatAdd   = lib.get<floatAdd_func>("floatAdd");
-    auto doubleAdd  = lib.get<doubleAdd_func>("doubleAdd");
-    auto getPoint   = lib.get<getPoint_func>("getPoint");
+    auto sayHello = lib.get<sayHello_func>("sayHello");
+    auto intAdd = lib.get<intAdd_func>("intAdd");
+    auto floatAdd = lib.get<floatAdd_func>("floatAdd");
+    auto doubleAdd = lib.get<doubleAdd_func>("doubleAdd");
+    auto getPoint = lib.get<getPoint_func>("getPoint");
     auto printPoint = lib.get<printPoint_func>("printPoint");
 
     // 直接调用函数符号
@@ -124,9 +125,10 @@ void func()
     testHasSymbol(lib);
     testGetVariable(lib);
     testGetVariable2(lib);
-    
+
     testNullLibrary();
     testNotExistSymbol(lib);
+    testCallback(lib);
   }
   catch (const std::exception &ex)
   {
@@ -293,13 +295,13 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
   try
   {
     // 正常调用: symbol是对的, 函数签名也正常
-    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);  
+    double ret = lib.invoke<double(double, double)>("doubleAdd", 1.5, 3.0);
     std::cout << "lib.invoke ret = " << ret << std::endl;
     // 未定义行为: symbol是对的,但是函数签名不一致
-    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);  
+    double ret2 = lib.invoke<double(double, double, double)>("doubleAdd", 1.5, 3.0, 1.0);
     std::cout << "[UB] lib.invoke ret2 = " << ret2 << std::endl;
     // 未定义行为: symbol是对的,但是函数签名不一致
-    double ret3 = lib.invoke<double()>("doubleAdd");  
+    double ret3 = lib.invoke<double()>("doubleAdd");
     std::cout << "[UB] lib.invoke ret3 = " << ret3 << std::endl;
   }
   catch (const std::exception &e)
@@ -310,33 +312,61 @@ void testNotExistSymbol(const dll::dynamic_library &lib)
   std::cout << "---------testNotExistSymbol----------" << std::endl;
 }
 
-
 typedef void (*double_callback_t)(double x, double y, double z);  // 简单函数回调
 typedef void (*point_callback_t)(point_t p);                      // 按值传递 point_t
 typedef void (*box_callback_t)(box_t *p);                         // 指针传递 box_t
 
 void my_double_callback(double x, double y, double z)
 {
-  std::cout << "my_double_callback: " << x << ", " << y << ", " << z << std::endl;
+  std::cout << "[my_double_callback]: " << x * x << ", " << y * y << ", " << z * z << std::endl;
 }
 
 void my_point_callback(point_t p)
 {
-  std::cout << "my_point_callback: (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+  std::cout << "[my_point_callback]: (" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
 }
 
 void my_box_callback(box_t *p)
 {
   if (p)
   {
-    std::cout << "my_box_callback: (" << p->min.x << ", " << p->min.y << ", " << p->min.z << ") - (" << p->max.x << ", "
-              << p->max.y << ", " << p->max.z << ")" << std::endl;
+    std::cout << "[my_box_callback]: (" << p->min.x << ", " << p->min.y << ", " << p->min.z << ") - (" << p->max.x
+              << ", " << p->max.y << ", " << p->max.z << ")" << std::endl;
   }
 }
 
 void testCallback(const dll::dynamic_library &lib)
 {
   std::cout << "---------testCallback----------" << std::endl;
-  
+  auto fn_hellostr = lib.get<const char *()>("getHelloString");
+  auto fn_getbox = lib.get<box_t()>("getBox");
+  box_t box = fn_getbox();
+  auto fn_box2String = lib.get<void(box_t, char *, unsigned int)>("box2String");
+  auto fn_point2String = lib.get<void(point_t *, char *, unsigned int)>("point2String");
+
+  std::cout << "getHelloString: " << fn_hellostr() << std::endl;
+
+  std::string boxStr(256, '\0');
+  fn_box2String(box, const_cast<char *>(boxStr.data()), boxStr.size());
+  std::cout << "box2String: " << boxStr << std::endl;
+
+  std::string pointStr(256, '\0');
+  fn_point2String(&box.min, const_cast<char *>(pointStr.data()), pointStr.size());
+  std::cout << "point2String: " << pointStr << std::endl;
+
+  // 回调函数
+  auto fn_set_double_callback = lib.get<void(double_callback_t)>("register_double_callback");
+  auto fn_set_point_callback = lib.get<void(point_callback_t)>("register_point_callback");
+  auto fn_set_box_callback = lib.get<void(box_callback_t)>("register_box_callback");
+  auto fn_trigger_callbacks = lib.get<void(int)>("trigger_callbacks");
+
+  fn_set_double_callback(my_double_callback);
+  fn_set_point_callback(my_point_callback);
+  fn_set_box_callback(my_box_callback);
+
+  fn_trigger_callbacks(7);
+  fn_trigger_callbacks(3);
+  fn_trigger_callbacks(1);
+
   std::cout << "---------testCallback----------" << std::endl;
 }
