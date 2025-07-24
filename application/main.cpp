@@ -20,8 +20,22 @@ struct point_t
   double z;
 };
 
+struct box_t
+{
+  int id;         // box 编号
+  char name[64];  // box 名称，固定长度字符串
+  point_t min;    // 最小点
+  point_t max;    // 最大点
+};
+
+
 using getPoint_func = point_t (*)();
 using printPoint_func = void (*)(point_t);
+
+// 函数指针类型定义
+typedef void (*double_callback_t)(double x, double y, double z);  // 简单函数回调
+typedef void (*point_callback_t)(point_t p);                      // 按值传递 point_t
+typedef void (*box_callback_t)(box_t *p);                         // 指针传递 box_t
 /// =========== 定义动态库中函数指针类型 end ===========
 
 void func();
