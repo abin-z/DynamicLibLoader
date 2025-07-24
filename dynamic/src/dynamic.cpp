@@ -78,7 +78,7 @@ DLL_PUBLIC_API void box2String(box_t arg, char *buf, unsigned int max_size)
   // 格式化示例字符串：
   // "box_t { id=42, name='Box Object id = 42', min=(123.000000,1234.000000,12345.000000),
   // max=(777.000000,888.000000,999.000000) }"
-  int ret = snprintf(buf, max_size, "box_t { id=%d, name='%s', min=(%.6f,%.6f,%.6f), max=(%.6f,%.6f,%.6f) }", arg.id,
+  int ret = snprintf(buf, max_size, "box_t { id=%d, name='%s', min=(%.3f,%.3f,%.3f), max=(%.3f,%.3f,%.3f) }", arg.id,
                      arg.name, arg.min.x, arg.min.y, arg.min.z, arg.max.x, arg.max.y, arg.max.z);
 
   // snprintf 会自动保证以 '\0' 结尾，若字符串超长，则会截断输出
@@ -93,7 +93,7 @@ DLL_PUBLIC_API void point2String(point_t *arg, char *buf, unsigned int max_size)
 
   // 格式化示例字符串：
   // "point_t { x=123.000000, y=456.000000, z=789.000000 }"
-  int ret = snprintf(buf, max_size, "point_t { x=%.6f, y=%.6f, z=%.6f }", arg->x, arg->y, arg->z);
+  int ret = snprintf(buf, max_size, "point_t { x=%.3f, y=%.3f, z=%.3f }", arg->x, arg->y, arg->z);
 
   (void)ret;
 }

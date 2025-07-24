@@ -364,9 +364,9 @@ void testCallback(const dll::dynamic_library &lib)
   fn_set_point_callback(my_point_callback);
   fn_set_box_callback(my_box_callback);
 
-  fn_trigger_callbacks(7);
-  fn_trigger_callbacks(3);
   fn_trigger_callbacks(1);
+  fn_trigger_callbacks(2);
+  fn_trigger_callbacks(4);
 
   std::cout << "---------testCallback----------" << std::endl;
 }
