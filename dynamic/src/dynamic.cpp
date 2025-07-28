@@ -125,6 +125,8 @@ DLL_PUBLIC_API void register_box_callback(box_callback_t cb)
 //   bit 2（值为 4）：触发 box 回调（g_box_cb）
 DLL_PUBLIC_API void trigger_callbacks(int n)
 {
+  Common::writeStringToFile("dynamic_log.txt", "Triggering callbacks, parameter: " + std::to_string(n) + "\n");
+
   if ((n & 1) && g_double_cb)
   {
     g_double_cb(1.1, 2.2, 3.3);
