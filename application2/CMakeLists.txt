@@ -1,5 +1,4 @@
 # 演示隐式加载动态库的例子
-
 cmake_minimum_required(VERSION 3.20)
 
 # 开启生成 compile_commands.json
@@ -15,8 +14,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build_output/bin) #
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build_output/bin) # 可执行文件
 
 project(app2 LANGUAGES C CXX VERSION 0.1)
-add_executable(application2 main.cpp)
 
-# linux 下使用 dl 库, Windows 默认不需要额外链接 dl 库
-target_link_libraries(application2 PRIVATE ${CMAKE_DL_LIBS})
-
+add_subdirectory(mainapp)
+add_subdirectory(dynamic_lib)
