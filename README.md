@@ -33,11 +33,15 @@
 
 ### 使用方法
 
-Header-only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
+Header-Only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
 
 ```cpp
 #include "dynamic_library.hpp"
 ```
+
+> 在 **Linux / Unix 系统** 下需要链接 **`libdl`**
+>
+> cmake: `target_link_libraries(<target_name> ${CMAKE_DL_LIBS})`
 
 ### 基础案例
 
