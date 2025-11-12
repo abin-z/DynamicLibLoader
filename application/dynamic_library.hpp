@@ -57,7 +57,16 @@ using symbol_pointer_t = typename symbol_pointer_traits<T>::type;
 
 // 定义平台相关的动态库 API
 #if defined(_WIN32) || defined(_WIN64)
+// 避免 <windows.h> 引入过多无关内容(如 Sockets、RPC、OLE 等), 减少编译时间与命名冲突
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+// 防止 Windows 宏 min/max 覆盖标准库 std::min/std::max
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+
 using library_handle = HMODULE;
 
 inline library_handle load_library(const std::string &path) noexcept
