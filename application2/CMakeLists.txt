@@ -16,4 +16,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build_output/bin) #
 project(Application2 LANGUAGES C CXX VERSION 0.1)
 
 add_subdirectory(mainapp)
-add_subdirectory(dynamic_lib)
+add_subdirectory(import_lib)
