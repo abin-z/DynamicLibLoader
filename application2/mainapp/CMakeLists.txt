@@ -1,9 +1,6 @@
 set(tgt_name application2)
 add_executable(${tgt_name} main.cpp)
 
-# Linux 下使用 dl 库，Windows 默认不需要额外链接
-target_link_libraries(${tgt_name} PRIVATE ${CMAKE_DL_LIBS})
-
 # 链接到 dynamic 库（隐式加载）
 target_link_libraries(${tgt_name} PRIVATE dynamic)
 
