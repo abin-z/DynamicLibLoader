@@ -33,7 +33,7 @@
 
 ### 使用方法
 
-Header-Only只需要将[`dynamic_library.hpp`](./application/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
+Header-Only只需要将[`dynamic_library.hpp`](application/dynamic_library/include/dynamic_library/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
 
 ```cpp
 #include "dynamic_library.hpp"
@@ -156,32 +156,58 @@ catch (const std::exception &e)
 ### 仓库目录结构介绍
 
 - [`dynamic`](dynamic/)目录是一个独立动态库模块(目标是生成动态库`.so`或者`.dll`).
-- [`application`](application/)目录是独立程序, 其中会在代码中显式加载`dynamic`动态库.
+- [`application`](application/)目录是独立程序, 完整演示在代码中显式加载`dynamic`动态库.
 
-- 封装了跨平台的动态库显式加载模块: [`application/dynamic_library.hpp`](./application/dynamic_library.hpp)
+- [`application2`](application2/) 目录是独立程序, 完整演示隐式加载`dynamic`库.
+
+- 封装了跨平台的动态库显式加载模块: [`application/dynamic_library`](application/dynamic_library)
 - 跨平台的动态库导出头文件: [`dynamic/include/dynamic/dll_export.h`](./dynamic/include/dynamic/dll_export.h)
-- 具体的使用案例请查看:  [`application/main.cpp`](./application/main.cpp)
+- 具体的使用案例请查看:  [`application/mainapp/main.cpp`](./application/mainapp/main.cpp)
 
 项目文件目录:
 
 ```sh
 .
-├── application                     # 2.使用本库加载dynamic生成的动态库
+├── README.md
+├── application					# <application> 完整演示使用本库显式加载.so库
 │   ├── CMakeLists.txt
-│   ├── dynamic_library.hpp
-│   └── main.cpp
+│   ├── README.md
+│   ├── dynamic_library			###### 核心库 dynamic_library ###### 
+│   │   ├── CMakeLists.txt
+│   │   └── include
+│   │       └── dynamic_library
+│   │           └── dynamic_library.hpp
+│   └── mainapp
+│       ├── CMakeLists.txt
+│       └── main.cpp
+├── application2				# <application2> 完整演示隐式加载.so库
+│   ├── CMakeLists.txt
+│   ├── README.md
+│   ├── import_lib
+│   │   ├── CMakeLists.txt
+│   │   ├── README.md
+│   │   ├── include
+│   │   │   ├── dll_export.h
+│   │   │   └── dynamic.h
+│   │   └── lib
+│   │       ├── dynamic.dll	   	# win系统下动态链接库(运行时)  .dll
+│   │       ├── dynamic.lib		# Win系统下导入库(编译/链接时) .lib
+│   │       └── libdynamic.so  	# UNIX系统下生成的动态共享库   .so
+│   └── mainapp
+│       ├── CMakeLists.txt
+│       └── main.cpp
 ├── docs
 │   └── 动态库的加载方式介绍.md
-├── dynamic                         # 1.生成dynamic动态库供application调用
-│   ├── CMakeLists.txt
-│   ├── include
-│   │   └── dynamic
-│   │       ├── common.hpp
-│   │       ├── dll_export.h
-│   │       └── dynamic.h
-│   └── src
-│       └── dynamic.cpp
-└── README.md
+└── dynamic						# <dynamic> 生成dynamic.so动态库供application调用
+    ├── CMakeLists.txt
+    ├── README.md
+    ├── include
+    │   └── dynamic
+    │       ├── common.hpp
+    │       ├── dll_export.h
+    │       └── dynamic.h
+    └── src
+        └── dynamic.cpp
 ```
 
 <details>
