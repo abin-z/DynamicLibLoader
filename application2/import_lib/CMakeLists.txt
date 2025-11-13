@@ -28,7 +28,7 @@ add_library(${tgt_name} SHARED IMPORTED GLOBAL)
 #------------------------------------------------------------
 # 平台说明:
 # Windows:
-#   - .dll : 程序运行时加载的动态库文件, 编译和运行时都需要
+#   - .dll : 程序运行时加载的动态库文件, 运行时需要
 #   - .lib : 链接时使用的“导入库”, 其中包含符号信息, 编译时需要链接该文件, 运行时不需要
 #
 # Linux / macOS:
@@ -40,7 +40,7 @@ add_library(${tgt_name} SHARED IMPORTED GLOBAL)
 # ------------------------------------------------------------
 if(WIN32)
     set_target_properties(${tgt_name} PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/dynamic.dll"   # 运行时动态库文件路径, 编译和运行时都需要
+        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/dynamic.dll"   # 运行时动态库文件路径, 运行时需要
         IMPORTED_IMPLIB   "${CMAKE_CURRENT_LIST_DIR}/lib/dynamic.lib"   # Windows 下链接时的导入库路径, 仅编译时需要
     )
 else()
