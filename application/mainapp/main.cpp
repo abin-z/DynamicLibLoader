@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "dynamic_library.hpp"
+#include "dynamic_library/dynamic_library.hpp"
 
 /*
  * 为了在没有头文件的情况下调用 libdynamic.so 中的内容，你需要使用 动态链接库的运行时加载机制，
@@ -62,7 +62,7 @@ void func()
 #if defined(_WIN32) || defined(_WIN64)
       "dynamic.dll";
 #else
-      "./bin/libdynamic.so";
+      "libdynamic.so";
 #endif
 
     // 加载动态库
