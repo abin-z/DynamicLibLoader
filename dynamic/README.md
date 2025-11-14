@@ -1,8 +1,10 @@
 ## 概述
 
-**dynamic 项目主要演示生成动态库.so或者.dll**(按C的方式导出符号, 供其他语言调用).
+**dynamic 项目主要演示生成动态库.so或者.dll**
 
-使用[dll_export.h](include/dynamic/dll_export.h)定义通用的导入导出修饰符
+(按C的方式导出符号, 供其他语言调用).
+
+使用[dll_export.h](include/dynamic/dll_export.h)定义通用的导入导出修饰符.
 
 ```cpp
 #pragma once
@@ -33,8 +35,8 @@
 
 具体导出符号的定义在 [dynamic.h](include/dynamic/dynamic.h) 中. 
 
-- 若其他程序使用显式加载符号就不需要该头文件.
-- 若其他程序使用隐式加载动态库就需要提供该头文件.
+- 若其他程序使用**显式加载**符号就不需要该头文件.
+- 若其他程序使用**隐式加载**动态库就需要提供该头文件.
 
 ```cpp
 #pragma once
