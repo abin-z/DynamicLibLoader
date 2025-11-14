@@ -169,10 +169,10 @@ catch (const std::exception &e)
 ```sh
 .
 ├── README.md
-├── application					# <application> 完整演示使用本库显式加载.so库
+├── application                 # <application> 完整演示使用本库显式加载.so库
 │   ├── CMakeLists.txt
 │   ├── README.md
-│   ├── dynamic_library			###### 核心库 dynamic_library ###### 
+│   ├── dynamic_library         ###### 核心库 dynamic_library ###### 
 │   │   ├── CMakeLists.txt
 │   │   └── include
 │   │       └── dynamic_library
@@ -180,7 +180,7 @@ catch (const std::exception &e)
 │   └── mainapp
 │       ├── CMakeLists.txt
 │       └── main.cpp
-├── application2				# <application2> 完整演示隐式加载.so库
+├── application2                # <application2> 完整演示隐式加载.so库
 │   ├── CMakeLists.txt
 │   ├── README.md
 │   ├── import_lib
@@ -190,15 +190,15 @@ catch (const std::exception &e)
 │   │   │   ├── dll_export.h
 │   │   │   └── dynamic.h
 │   │   └── lib
-│   │       ├── dynamic.dll	   	# win系统下动态链接库(运行时)  .dll
-│   │       ├── dynamic.lib		# Win系统下导入库(编译/链接时) .lib
-│   │       └── libdynamic.so  	# UNIX系统下生成的动态共享库   .so
+│   │       ├── dynamic.dll     # win系统下动态链接库(运行时)  .dll
+│   │       ├── dynamic.lib     # Win系统下导入库(编译/链接时) .lib
+│   │       └── libdynamic.so   # UNIX系统下生成的动态共享库   .so
 │   └── mainapp
 │       ├── CMakeLists.txt
 │       └── main.cpp
 ├── docs
 │   └── 动态库的加载方式介绍.md
-└── dynamic						# <dynamic> 生成dynamic.so动态库供application调用
+└── dynamic                     # <dynamic> 生成dynamic.so动态库供application调用
     ├── CMakeLists.txt
     ├── README.md
     ├── include
