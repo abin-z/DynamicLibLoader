@@ -2,9 +2,11 @@
 
 **dynamic 项目主要演示生成动态库.so或者.dll**
 
-(按C的方式导出符号, 供其他语言调用).
+常见场景: 供其他语言调用或者给第三方机构提供类库等.
 
-使用[dll_export.h](include/dynamic/dll_export.h)定义通用的导入导出修饰符.
+(按C的方式导出符号, 二进制ABI较好, 可供其他语言调用).
+
+使用 [dll_export.h](include/dynamic/dll_export.h) 定义通用的导入导出修饰符.
 
 ```cpp
 #pragma once

@@ -25,7 +25,11 @@
     └── main.cpp
 ```
 
-使用Modern CMake管理的已编译好的三方库:
+使用**Modern CMake**管理的已编译好的三方库:
+
+> 本演示项目是将 dynamic 编译成对应动态链接库, 然后放在 [import_lib/lib](import_lib/lib) 路径下.
+>
+> 使用下面的 CMakeLists.txt 管理导入的动态库.
 
 ```CMake
 # ============================================================
@@ -104,7 +108,7 @@ set_target_properties(${tgt_name} PROPERTIES
 
 ```
 
-它的几个核心理由：
+该CMakeLists.txt的几个核心理由：
 
 1. **IMPORTED 让 CMake 知道库已存在，不会重新编译**
 2. **通过 target，让 include 和 link 信息自动传播，不污染全局**
