@@ -10,8 +10,8 @@
 
 /// =========== 定义动态库中函数指针类型 start ===========
 using sayHello_func = void (*)();                // 函数指针类型
-using intAdd_func = int (&)(int, int);           // 引用函数指针类型
-using floatAdd_func = float (&&)(float, float);  // 右值引用函数指针类型
+using intAdd_func = int (&)(int, int);           // 函数左值引用类型
+using floatAdd_func = float (&&)(float, float);  // 函数右值引用类型
 using doubleAdd_func = double(double, double);   // 函数类型
 // 动态库中的struct
 struct point_t
