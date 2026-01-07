@@ -76,7 +76,7 @@ inline library_handle load_library(const std::string &path) noexcept
 
 inline void unload_library(library_handle handle) noexcept
 {
-  if (handle)
+  if (handle != nullptr)
   {
     FreeLibrary(handle);
   }
@@ -98,7 +98,7 @@ inline std::string get_last_error()
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
                    error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, nullptr);
   std::string message;
-  if (size && msgBuffer)
+  if ((size != 0U) && (msgBuffer != nullptr))
   {
     message.assign(static_cast<LPSTR>(msgBuffer), size);
     LocalFree(msgBuffer);
@@ -225,7 +225,7 @@ class dynamic_library
       if (cache_.find(name) != cache_.end()) return true;  // 先查缓存
     }
     void *sym = try_get<void>(name);
-    if (sym)
+    if (sym != nullptr)
     {
       std::lock_guard<std::mutex> lock(mtx_);
       cache_[name] = sym;  // 添加缓存
@@ -405,7 +405,7 @@ class dynamic_library
   void load_handle(const std::string &libPath)
   {
     handle_ = detail::load_library(libPath);
-    if (!handle_)
+    if (handle_ == nullptr)
     {
       throw std::runtime_error("[dynamic_library] error: Failed to load library: '" + libPath + "' " +
                                detail::get_last_error());
@@ -415,7 +415,7 @@ class dynamic_library
   /// @brief 只是卸载动态库
   void unload_handle() noexcept
   {
-    if (handle_)  // 只有在 handle 非 nullptr 时才卸载
+    if (handle_ != nullptr)  // 只有在 handle 非 nullptr 时才卸载
     {
       detail::unload_library(handle_);
       handle_ = nullptr;
