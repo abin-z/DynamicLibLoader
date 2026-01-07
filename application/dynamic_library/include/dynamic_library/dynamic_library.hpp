@@ -122,7 +122,7 @@ inline library_handle load_library(const std::string &path) noexcept
 
 inline void unload_library(library_handle handle) noexcept
 {
-  if (handle)
+  if (handle != nullptr)
   {
     dlclose(handle);
   }
@@ -138,7 +138,7 @@ inline symbol_pointer_t<F> load_symbol(library_handle handle, const std::string 
 inline std::string get_last_error()
 {
   const char *error = dlerror();
-  return error ? std::string(error) : "Unknown error";
+  return (error != nullptr) ? std::string(error) : "Unknown error";
 }
 #endif
 
