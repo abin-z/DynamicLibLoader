@@ -62,7 +62,7 @@ void func()
 #if defined(_WIN32) || defined(_WIN64)
       "dynamic.dll";
 #else
-      "libdynamic.so";
+      "./libdynamic.so";
 #endif
 
     // 加载动态库
