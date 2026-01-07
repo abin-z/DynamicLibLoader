@@ -1,7 +1,7 @@
 /*********************************************************************************************************
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * @file: dynamic_library.hpp
- * @version: v0.9.6
+ * @version: v0.9.7
  * @description: Cross-platform dynamic library explicit loader
  *    - Provides a cross-platform way to load dynamic libraries.
  *    - Uses conditional compilation for platform-specific handling (Windows vs POSIX: Linux/macOS).
