@@ -96,7 +96,7 @@ inline std::string get_last_error()
   LPVOID msgBuffer = nullptr;
   size_t size =
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-                   error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, nullptr);
+                   error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&msgBuffer), 0, nullptr);
   std::string message;
   if ((size != 0U) && (msgBuffer != nullptr))
   {
@@ -160,7 +160,7 @@ class dynamic_library
    * @param libPath 动态库路径
    * @throw std::runtime_error 如果加载失败, 则抛出异常
    */
-  explicit dynamic_library(const std::string &libPath) : handle_(nullptr)
+  explicit dynamic_library(const std::string &libPath)
   {
     load_handle(libPath);
   }
@@ -430,7 +430,7 @@ class dynamic_library
   }
 
  private:
-  library_handle handle_ = nullptr;                        // 动态库句柄
+  library_handle handle_{nullptr};                         // 动态库句柄
   mutable std::unordered_map<std::string, void *> cache_;  // 符号缓存
   mutable std::mutex mtx_;                                 // 互斥锁, 保护符号缓存线程安全
 };
