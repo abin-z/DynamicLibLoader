@@ -95,12 +95,12 @@ inline std::string get_last_error()
 
   LPVOID msgBuffer = nullptr;
   size_t size =
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-                   error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL);
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
+                   error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, nullptr);
   std::string message;
   if (size && msgBuffer)
   {
-    message.assign((LPSTR)msgBuffer, size);
+    message.assign(static_cast<LPSTR>(msgBuffer), size);
     LocalFree(msgBuffer);
   }
   else
