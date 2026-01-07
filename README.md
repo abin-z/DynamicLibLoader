@@ -1,5 +1,7 @@
 # DynamicLibLoader 跨平台动态库加载器
 
+[![shared_object](https://img.shields.io/badge/.so-8A2BE2)](https://man7.org/linux/man-pages/man3/dlopen.3.html) [![dynamic_link_library](https://img.shields.io/badge/.dll-8A2BE2)](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries) [![dynamic_library](https://img.shields.io/badge/.dylib-8A2BE2)](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/OverviewOfDynamicLibraries.html) [![headeronly](https://img.shields.io/badge/Header_Only-green)](https://github.com/abin-z/DynamicLibLoader/blob/main/application/dynamic_library/include/dynamic_library/dynamic_library.hpp) [![moderncpp](https://img.shields.io/badge/Modern_C%2B%2B-218c73)](https://learn.microsoft.com/en-us/cpp/cpp/welcome-back-to-cpp-modern-cpp?view=msvc-170) [![licenseMIT](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/license/MIT) [![version](https://img.shields.io/badge/version-0.9.7-green)](https://github.com/abin-z/DynamicLibLoader/releases)
+
 **DynamicLibLoader** 是一个跨平台的动态库加载器，提供了一个统一的 API 来显式加载动态库并调用其中的符号（函数或变量）。支持 Windows 和 POSIX 系统(如 Linux、macOS)，自动处理平台差异。
 
 ### 核心特性概览:
@@ -33,7 +35,7 @@
 
 ### 使用方法
 
-Header-Only只需要将[`dynamic_library.hpp`](application/dynamic_library/include/dynamic_library/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
+**Header-Only (Single-File)** 只需要将[`dynamic_library.hpp`](application/dynamic_library/include/dynamic_library/dynamic_library.hpp)文件拷贝至你的项目引入即可使用:
 
 ```cpp
 #include "dynamic_library.hpp"
