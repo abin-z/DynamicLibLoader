@@ -23,7 +23,8 @@ performance-unnecessary-value-param,
 -readability-named-parameter,
 -cert-env33-c,
 -readability-identifier-length,
--readability-redundant-access-specifiers
+-readability-redundant-access-specifiers,
+-cppcoreguidelines-pro-type-reinterpret-cast
 '
 
 
