@@ -45,8 +45,7 @@ using remove_ptr_ref_t = typename std::remove_pointer<typename std::remove_refer
 ///        - 用于获取适合 dlsym/GetProcAddress 转换的原始指针类型
 ///        - 支持函数类型、变量类型, 自动剥离引用和一级指针, 再加上一级指针
 template <typename T>
-struct symbol_pointer_traits
-{
+struct symbol_pointer_traits {
   using type = typename std::add_pointer<remove_ptr_ref_t<T>>::type;
 };
 
@@ -147,8 +146,7 @@ inline std::string get_last_error()
 using detail::library_handle;
 
 /// @brief 动态库加载类, 使用 RAII 管理动态库资源
-class dynamic_library
-{
+class dynamic_library {
   template <typename T>
   using symbol_pointer_t = typename detail::symbol_pointer_t<T>;
 
